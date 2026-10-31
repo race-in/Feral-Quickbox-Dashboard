@@ -46,8 +46,12 @@ if [[ -n "$prefix" ]]; then
 fi
 
 for dir in "$CONFIG_DIR" "$DATA_DIR" "$CACHE_DIR"; do
+  if [[ -L "$dir" ]]; then
+    printf 'ERROR: Refusing to use a symlink as an application directory: %s\\n' "$dir" >&2
+    exit 1
+  fi
   if [[ -e "$dir" && ! -d "$dir" ]]; then
-    printf 'ERROR: Expected a directory but found another file type: %s\n' "$dir" >&2
+    printf 'ERROR: Expected a directory but found another file type: %s\\n' "$dir" >&2
     exit 1
   fi
 done
@@ -56,6 +60,15 @@ mkdir -p -- "$CONFIG_DIR" "$DATA_DIR" "$CACHE_DIR"
 chmod 700 "$CONFIG_DIR" "$DATA_DIR" "$CACHE_DIR"
 
 config_file="$CONFIG_DIR/config.env"
+if [[ -L "$config_file" ]]; then
+  printf 'ERROR: Refusing to write through a configuration symlink: %s\\n' "$config_file" >&2
+  exit 1
+fi
+if [[ -e "$config_file" && ! -f "$config_file" ]]; then
+  printf 'ERROR: Configuration path exists but is not a regular file: %s\\n' "$config_file" >&2
+  exit 1
+fi
+
 if [[ ! -e "$config_file" ]]; then
   umask 077
   cat >"$config_file" <<'EOF'
