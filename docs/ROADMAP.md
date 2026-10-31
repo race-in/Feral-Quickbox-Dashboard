@@ -4,10 +4,12 @@
 - [x] Establish a rootless-only repository scaffold.
 - [x] Add conservative install/uninstall scripts.
 - [x] Add CI validation and security guidance.
-- [ ] Validate scripts on an actual Feral shared slot.
+- [x] Review the QuickBox Lite backend and document privileged assumptions.
+- [x] Add a read-only Feral environment preflight script.
+- [ ] Validate the preflight on an actual Feral shared slot.
 
 ## Phase 1 — upstream dashboard compatibility
-- [ ] Pin and document the exact QuickBox Lite upstream revision.
+- [x] Pin and document the reviewed QuickBox Lite upstream revision.
 - [ ] Review every backend route, shell command, dependency, and privileged operation.
 - [ ] Separate the frontend from the upstream systemd service assumptions.
 - [ ] Replace system-wide service management with user-owned process controls.
