@@ -53,6 +53,7 @@ if ! grep -q '^PASSWORD_HASH=' "$CFG"; then
     ((N>=12 && N<=72)) || { echo 'Password must be 12–72 bytes.' >&2; continue; }
     break
   done
+  # shellcheck disable=SC2016
   H="$(printf '%s' "$P" | php -r '$p=stream_get_contents(STDIN); echo password_hash($p,PASSWORD_DEFAULT);')"
   unset P Q
   [[ -n "$H" ]] || { echo 'ERROR: Could not hash password.' >&2; exit 1; }
@@ -61,6 +62,7 @@ if ! grep -q '^PASSWORD_HASH=' "$CFG"; then
 fi
 mkdir -p -- "$DEST"
 cp -a -- "$ROOT/public/." "$DEST/"
+# shellcheck disable=SC2016
 php -r 'echo "<?php\nif (!defined(\x27FQD_BOOTSTRAPPED\x27)) { http_response_code(404); exit; }\nreturn " . var_export($argv[1], true) . ";\n";' "$CFG" >"$DEST/config-path.php.tmp"
 chmod 644 "$DEST/config-path.php.tmp"
 mv -f -- "$DEST/config-path.php.tmp" "$DEST/config-path.php"
