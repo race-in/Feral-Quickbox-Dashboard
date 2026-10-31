@@ -197,12 +197,12 @@ a{color:inherit;text-decoration:none}.shell{min-height:100vh}.sidebar{position:f
         <article class="resource-card memory-card">
           <div class="resource-card-top"><span class="resource-name"><span class="resource-icon">▤</span> MEMORY</span><span class="resource-tag">RAM</span></div>
           <div class="resource-main"><div class="resource-reading" id="mem">—<small>%</small></div><div class="resource-orb memory-orb"><span>RAM</span><b>MEM</b></div></div>
-          <div class="resource-track"><i id="mem-bar"></i></div><div class="resource-bottom"><span id="mem-note">Memory utilization</span><strong id="mem-detail">Waiting</strong></div>
+          <div class="resource-track"><i id="mem-bar"></i></div><div class="resource-bottom"><span id="mem-note">Memory utilization</span><strong id="mem-card-detail">Waiting</strong></div>
         </article>
         <article class="resource-card storage-card">
           <div class="resource-card-top"><span class="resource-name"><span class="resource-icon">▣</span> STORAGE</span><span class="resource-tag">HOME FS</span></div>
           <div class="resource-main"><div class="resource-reading" id="disk">—<small>%</small></div><div class="resource-orb storage-orb"><span>DISK</span><b>FS</b></div></div>
-          <div class="resource-track"><i id="disk-bar"></i></div><div class="resource-bottom"><span id="disk-note">Filesystem usage</span><strong id="disk-detail">Waiting</strong></div>
+          <div class="resource-track"><i id="disk-bar"></i></div><div class="resource-bottom"><span id="disk-note">Filesystem usage</span><strong id="disk-card-detail">Waiting</strong></div>
         </article>
         <article class="resource-card uptime-card">
           <div class="resource-card-top"><span class="resource-name"><span class="resource-icon">◷</span> AVAILABILITY</span><span class="resource-tag">UPTIME</span></div>
