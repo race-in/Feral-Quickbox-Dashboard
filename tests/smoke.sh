@@ -1,65 +1,46 @@
 #!/usr/bin/env bash
-# Feral Quickbox Dashboard - user-space installer smoke tests
+# Feral Quickbox Dashboard - rootless installer/deployment tests
 # Copyright (C) 2026 race-in contributors
 # SPDX-License-Identifier: GPL-3.0-or-later
 set -Eeuo pipefail
 IFS=$'\n\t'
-
-repo_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
-tmp_root="$(mktemp -d)"
-trap 'rm -rf -- "$tmp_root"' EXIT
-
-export HOME="$tmp_root/home"
-export XDG_CONFIG_HOME="$tmp_root/xdg-config"
-export XDG_DATA_HOME="$tmp_root/xdg-data"
-export XDG_CACHE_HOME="$tmp_root/xdg-cache"
-mkdir -p -- "$HOME"
-
-bash "$repo_root/install.sh"
-
-config_dir="$XDG_CONFIG_HOME/feral-quickbox"
-data_dir="$XDG_DATA_HOME/feral-quickbox"
-cache_dir="$XDG_CACHE_HOME/feral-quickbox"
-config_file="$config_dir/config.env"
-
-[[ -d "$config_dir" && -d "$data_dir" && -d "$cache_dir" ]]
-[[ "$(stat -c '%a' "$config_dir")" == "700" ]]
-[[ "$(stat -c '%a' "$config_file")" == "600" ]]
-grep -q '^HOST=127.0.0.1$' "$config_file"
-
-# An existing configuration must remain byte-for-byte unchanged.
-printf '\n# preserve-this-setting\n' >>"$config_file"
-cp -- "$config_file" "$tmp_root/config.before"
-bash "$repo_root/install.sh"
-cmp -- "$config_file" "$tmp_root/config.before"
-
-# Cancellation must not delete the application data directory.
-printf 'n\n' | bash "$repo_root/uninstall.sh"
-[[ -d "$data_dir" ]]
-
-# Default uninstall removes data only and preserves settings.
-printf 'y\n' | bash "$repo_root/uninstall.sh"
-[[ ! -e "$data_dir" ]]
-[[ -f "$config_file" ]]
-
-# --purge explicitly removes configuration and cache as well.
-printf 'y\n' | bash "$repo_root/uninstall.sh" --purge
-[[ ! -e "$config_dir" && ! -e "$cache_dir" ]]
-
-# Explicit prefix must work without touching XDG locations.
-prefix="$tmp_root/custom-prefix"
-bash "$repo_root/install.sh" --prefix "$prefix"
-[[ -f "$prefix/config/config.env" ]]
-[[ -d "$prefix/data" && -d "$prefix/cache" ]]
-
-# A symlinked configuration file must never be followed for writing.
-rm -rf -- "$prefix/config/config.env"
-printf 'outside\n' >"$tmp_root/outside"
-ln -s -- "$tmp_root/outside" "$prefix/config/config.env"
-if bash "$repo_root/install.sh" --prefix "$prefix"; then
-  printf 'ERROR: installer accepted a symlinked config file\n' >&2
-  exit 1
-fi
-[[ "$(cat "$tmp_root/outside")" == "outside" ]]
-
-printf 'All rootless installer smoke tests passed.\n'
+repo="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+tmp="$(mktemp -d)"
+trap 'rm -rf -- "$tmp"' EXIT
+export HOME="$tmp/home" XDG_CONFIG_HOME="$tmp/config" XDG_DATA_HOME="$tmp/data" XDG_CACHE_HOME="$tmp/cache"
+mkdir -p "$HOME"
+bash "$repo/install.sh"
+cfg="$XDG_CONFIG_HOME/feral-quickbox/config.env"
+[[ -f "$cfg" && "$(stat -c '%a' "$cfg")" == 600 ]]
+grep -q "^HOME_PATH=$HOME$" "$cfg"
+printf '\n# preserved\n' >> "$cfg"
+cp "$cfg" "$tmp/config.before"
+bash "$repo/install.sh"
+cmp "$cfg" "$tmp/config.before"
+prefix="$tmp/custom"
+mkdir -p "$prefix/feral-quickbox" "$tmp/data/feral-quickbox" "$tmp/cache/feral-quickbox"
+printf 'outside\n' > "$tmp/outside"
+ln -s "$tmp/outside" "$prefix/feral-quickbox/config.env"
+if XDG_CONFIG_HOME="$prefix" bash "$repo/install.sh"; then echo 'ERROR: symlink config accepted' >&2; exit 1; fi
+[[ "$(cat "$tmp/outside")" == outside ]]
+web="$HOME/www/test.feralhosting.com/public_html"
+mkdir -p "$web"
+printf 'SmokeTestPassword123!\nSmokeTestPassword123!\n' | bash "$repo/install.sh" --webroot "$web"
+app="$web/Feral-Quickbox-Dashboard"
+[[ -f "$app/index.php" && -f "$app/.fqd-managed" && -f "$app/config-path.php" ]]
+grep -q '^PASSWORD_HASH=' "$cfg"
+[[ "$(stat -c '%a' "$cfg")" == 600 ]]
+php -l "$app/index.php" >/dev/null
+cp "$cfg" "$tmp/deployed-config"
+bash "$repo/install.sh" --webroot "$web"
+cmp "$cfg" "$tmp/deployed-config"
+other="$HOME/www/other.feralhosting.com/public_html"
+mkdir -p "$other/Feral-Quickbox-Dashboard"
+echo keep > "$other/Feral-Quickbox-Dashboard/keep.txt"
+if bash "$repo/install.sh" --webroot "$other"; then echo 'ERROR: unmanaged destination accepted' >&2; exit 1; fi
+[[ "$(cat "$other/Feral-Quickbox-Dashboard/keep.txt")" == keep ]]
+printf 'n\n' | bash "$repo/uninstall.sh" --webroot "$web"
+[[ -f "$app/index.php" ]]
+printf 'y\n' | bash "$repo/uninstall.sh" --webroot "$web"
+[[ ! -e "$app" && -f "$cfg" ]]
+echo 'All rootless installer/deployment smoke tests passed.'
