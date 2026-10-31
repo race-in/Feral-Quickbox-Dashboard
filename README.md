@@ -67,7 +67,7 @@ The future runtime configuration will live under the user's home directory, not 
 ~/.cache/feral-quickbox/
 ```
 
-See [docs/ROADMAP.md](docs/ROADMAP.md), [docs/SECURITY.md](docs/SECURITY.md), and the [upstream compatibility review](docs/UPSTREAM-REVIEW.md). Run `bash scripts/feral-preflight.sh` on the slot to collect non-invasive environment diagnostics before any dashboard runtime is installed.
+See [docs/ROADMAP.md](docs/ROADMAP.md), [docs/SECURITY.md](docs/SECURITY.md), the [QuickBox Lite compatibility review](docs/UPSTREAM-REVIEW.md), and the [QuickBox Classic dashboard reference audit](docs/CLASSIC-QUICKBOX-REFERENCE.md). Run `bash scripts/feral-preflight.sh` on the slot to collect non-invasive environment diagnostics before any dashboard runtime is installed.
 
 ## Upstream acknowledgement and licensing
 
