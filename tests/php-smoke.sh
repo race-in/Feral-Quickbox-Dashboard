@@ -9,10 +9,15 @@ mkdir -p "$app" "$(dirname "$cfg")"
 cp public/index.php "$app/"
 # shellcheck disable=SC2016
 hash="$(printf '%s' 'SmokeTestPassword123!' | php -r '$p=stream_get_contents(STDIN); echo password_hash($p,PASSWORD_DEFAULT);')"
-printf 'PASSWORD_HASH="%s"\nHOME_PATH=%s\n' "$hash" "$tmp" >"$cfg"
+printf 'PASSWORD_HASH="%s"
+HOME_PATH=%s
+' "$hash" "$tmp" >"$cfg"
 chmod 700 "$(dirname "$cfg")"; chmod 600 "$cfg"
 # shellcheck disable=SC2016
-php -r 'echo "<?php\nif (!defined(\x27FQD_BOOTSTRAPPED\x27)) { http_response_code(404); exit; }\nreturn " . var_export($argv[1], true) . ";\n";' "$cfg" >"$app/config-path.php"
+php -r 'echo "<?php
+if (!defined(\x27FQD_BOOTSTRAPPED\x27)) { http_response_code(404); exit; }
+return " . var_export($argv[1], true) . ";
+";' "$cfg" >"$app/config-path.php"
 # shellcheck disable=SC2016
 port="$(php -r '$s=stream_socket_server("tcp://127.0.0.1:0",$e,$m); echo parse_url("tcp://".stream_socket_get_name($s,false),PHP_URL_PORT); fclose($s);')"
 php -S "127.0.0.1:$port" -t "$web" >"$tmp/server.log" 2>&1 & pid=$!
@@ -35,7 +40,16 @@ grep -q 'network-chart' "$tmp/dashboard"
 grep -q 'Network activity' "$tmp/dashboard"
 grep -q 'resource-grid' "$tmp/dashboard"
 grep -q 'monitor-grid' "$tmp/dashboard"
-grep -q 'SYSTEM DIAGNOSTICS' "$tmp/dashboard"\ngrep -q 'data-view-target="resources"' "$tmp/dashboard"\ngrep -q 'data-view-target="network"' "$tmp/dashboard"\ngrep -q 'data-view-target="system"' "$tmp/dashboard"\ngrep -q 'data-view="resources"' "$tmp/dashboard"\ngrep -q 'data-view="network"' "$tmp/dashboard"\ngrep -q 'data-view="system"' "$tmp/dashboard"\ngrep -q 'network-chart-detail' "$tmp/dashboard"\ngrep -q 'platform-kernel' "$tmp/dashboard"\ngrep -q 'cpu_cores' "$tmp/dashboard"
+grep -q 'SYSTEM DIAGNOSTICS' "$tmp/dashboard"
+grep -q 'data-view-target="resources"' "$tmp/dashboard"
+grep -q 'data-view-target="network"' "$tmp/dashboard"
+grep -q 'data-view-target="system"' "$tmp/dashboard"
+grep -q 'data-view="resources"' "$tmp/dashboard"
+grep -q 'data-view="network"' "$tmp/dashboard"
+grep -q 'data-view="system"' "$tmp/dashboard"
+grep -q 'network-chart-detail' "$tmp/dashboard"
+grep -q 'platform-kernel' "$tmp/dashboard"
+grep -q 'cpu_cores' "$tmp/dashboard"
 [[ "$(grep -o 'id=\"mem-detail\"' "$tmp/dashboard" | wc -l)" -eq 1 ]]
 [[ "$(grep -o 'id=\"disk-detail\"' "$tmp/dashboard" | wc -l)" -eq 1 ]]
 csrf="$(sed -n 's/.*name="csrf" value="\([a-f0-9]*\)".*/\1/p' "$tmp/dashboard" | head -1)"
