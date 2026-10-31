@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  shellcheck:
+    name: ShellCheck and shell syntax
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install ShellCheck
+        run: sudo apt-get update && sudo apt-get install --yes shellcheck
+      - name: Bash syntax
+        run: bash -n install.sh uninstall.sh
+      - name: ShellCheck
+        run: shellcheck --severity=style install.sh uninstall.sh
+      - name: Help smoke tests
+        run: |
+          bash install.sh --help
+          bash uninstall.sh --help
+
+  repository-hygiene:
+    name: Repository hygiene
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check whitespace errors
+        run: git diff --check
+      - name: Verify no accidental executable files are missing
+        run: |
+          test -s README.md
+          test -s LICENSE
+          test -s docs/SECURITY.md
+          test -s docs/ROADMAP.md
