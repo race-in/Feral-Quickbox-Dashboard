@@ -91,7 +91,8 @@ function fqd_metrics($config) {
     $up = @file_get_contents('/proc/uptime');
     $uptime = $up !== false ? (int) floor((float) strtok($up, ' ')) : null;
     $load = function_exists('sys_getloadavg') ? @sys_getloadavg() : false;
-    $cpuInfo = @file('/proc/stat', FILE_IGNORE_NEW_LINES); $cpuCores = 0; if (is_array($cpuInfo)) foreach ($cpuInfo as $line) if (preg_match('/^cpu[0-9]+\\s/', $line)) $cpuCores++;\n    return array('time' => time(), 'cpu' => $cpu, 'cpu_cores' => $cpuCores, 'memory' => $mem, 'disk' => $disk, 'network' => $net, 'uptime' => $uptime, 'load' => is_array($load) ? $load : null, 'platform' => array('kernel' => php_uname('r'), 'system' => php_uname('s'), 'architecture' => php_uname('m'), 'php' => PHP_VERSION),
+    $cpuInfo = @file('/proc/stat', FILE_IGNORE_NEW_LINES); $cpuCores = 0; if (is_array($cpuInfo)) foreach ($cpuInfo as $line) if (preg_match('/^cpu[0-9]+\\s/', $line)) $cpuCores++;
+    return array('time' => time(), 'cpu' => $cpu, 'cpu_cores' => $cpuCores, 'memory' => $mem, 'disk' => $disk, 'network' => $net, 'uptime' => $uptime, 'load' => is_array($load) ? $load : null, 'platform' => array('kernel' => php_uname('r'), 'system' => php_uname('s'), 'architecture' => php_uname('m'), 'php' => PHP_VERSION),
         'scope' => 'CPU, memory, network and load may be host-wide on shared hosting. Disk shows home filesystem capacity, not your Feral quota.');
 }
 if (isset($_GET['action']) && $_GET['action'] === 'metrics') {
