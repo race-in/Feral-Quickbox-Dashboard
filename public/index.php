@@ -26,7 +26,7 @@ header('Pragma: no-cache');
 header('X-Content-Type-Options: nosniff');
 header('X-Frame-Options: DENY');
 header('Referrer-Policy: same-origin');
-header("Content-Security-Policy: default-src 'self'; style-src 'nonce-{$nonce}'; script-src 'nonce-{$nonce}'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'");
+header("Content-Security-Policy: default-src 'self'; style-src 'self' 'nonce-{$nonce}'; script-src 'nonce-{$nonce}'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'");
 session_name('FQDSESSID');
 ini_set('session.use_strict_mode', '1');
 ini_set('session.use_only_cookies', '1');
@@ -144,7 +144,7 @@ a{color:inherit;text-decoration:none}.shell{min-height:100vh}.sidebar{position:f
 @media(max-width:1120px){.sidebar{width:210px}.main{margin-left:210px}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.content-grid{grid-template-columns:1fr}}
 @media(max-width:680px){.sidebar{position:static;width:auto;height:auto;padding:13px 15px;border-right:0;border-bottom:1px solid var(--line)}.brand{padding:0}.nav-label,.nav-link,.side-bottom{display:none}.main{margin:0;padding:19px 13px 25px}.topbar{align-items:flex-start}.topbar h1{font-size:21px}.top-actions{gap:6px}.host-pill{font-size:9px;padding:8px}.logout{padding:8px}.intro{display:block;padding:21px 0 15px}.updated{display:block;margin-top:10px}.metrics{gap:9px}.metric{padding:13px;min-height:132px}.metric-value{font-size:25px}.metric-foot{font-size:8px}.panel{padding:15px}.chart-wrap{height:150px}.footer{display:grid;gap:7px}.band strong{font-size:15px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{transition:none!important;scroll-behavior:auto!important}}
-</style></head><body>
+</style><link rel="stylesheet" href="<?php echo htmlspecialchars($base . '/dashboard-theme.css', ENT_QUOTES, 'UTF-8'); ?>"></head><body>
 <?php if (!$auth): ?>
 <main class="login"><section class="loginbox"><div class="login-logo">FQ</div><p class="eyebrow">FERAL HOSTING · PRIVATE CONSOLE</p><h1>Welcome back<span style="color:#a99aff">.</span></h1><p class="muted">Sign in to view your private slot dashboard.</p><?php if ($error !== ''): ?><p class="alert" role="alert"><?php echo htmlspecialchars($error, ENT_QUOTES, 'UTF-8'); ?></p><?php endif; ?>
 <form method="post" action="<?php echo htmlspecialchars($base . '/', ENT_QUOTES, 'UTF-8'); ?>"><input type="hidden" name="csrf" value="<?php echo htmlspecialchars($csrf, ENT_QUOTES, 'UTF-8'); ?>"><label for="pw">Dashboard password</label><input id="pw" name="password" type="password" minlength="12" maxlength="72" autocomplete="current-password" required autofocus><button type="submit">Sign in&nbsp; →</button></form><p class="fine">Private read-only monitoring · No system changes</p></section></main>
