@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   shellcheck:
-    name: ShellCheck and shell syntax
+    name: ShellCheck and shell tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -19,10 +19,12 @@ jobs:
       - name: Install ShellCheck
         run: sudo apt-get update && sudo apt-get install --yes shellcheck
       - name: Bash syntax
-        run: bash -n install.sh uninstall.sh
+        run: bash -n install.sh uninstall.sh tests/smoke.sh
       - name: ShellCheck
-        run: shellcheck --severity=style install.sh uninstall.sh
-      - name: Help smoke tests
+        run: shellcheck --severity=style install.sh uninstall.sh tests/smoke.sh
+      - name: Installer and uninstaller smoke tests
+        run: bash tests/smoke.sh
+      - name: Help output
         run: |
           bash install.sh --help
           bash uninstall.sh --help
@@ -34,9 +36,10 @@ jobs:
       - uses: actions/checkout@v4
       - name: Check whitespace errors
         run: git diff --check
-      - name: Verify no accidental executable files are missing
+      - name: Verify required project files
         run: |
           test -s README.md
           test -s LICENSE
+          test -s NOTICE
           test -s docs/SECURITY.md
           test -s docs/ROADMAP.md
