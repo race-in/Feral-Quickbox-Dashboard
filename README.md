@@ -52,6 +52,7 @@ Clone the repository and inspect the installer:
 git clone https://github.com/race-in/Feral-Quickbox-Dashboard.git
 cd Feral-Quickbox-Dashboard
 bash install.sh --help
+bash scripts/feral-preflight.sh
 ```
 
 The installer is intentionally conservative. The initial scaffold only creates a project-owned directory and configuration template; it does not start a dashboard server.
@@ -66,7 +67,7 @@ The future runtime configuration will live under the user's home directory, not 
 ~/.cache/feral-quickbox/
 ```
 
-See [docs/ROADMAP.md](docs/ROADMAP.md) and [docs/SECURITY.md](docs/SECURITY.md).
+See [docs/ROADMAP.md](docs/ROADMAP.md), [docs/SECURITY.md](docs/SECURITY.md), and the [upstream compatibility review](docs/UPSTREAM-REVIEW.md). Run `bash scripts/feral-preflight.sh` on the slot to collect non-invasive environment diagnostics before any dashboard runtime is installed.
 
 ## Upstream acknowledgement and licensing
 
