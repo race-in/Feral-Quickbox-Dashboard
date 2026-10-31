@@ -66,14 +66,14 @@ function fqd_metrics($config) {
         foreach ($raw as $line) if (preg_match('/^(MemTotal|MemAvailable|MemFree|Buffers|Cached):\\s+(\\d+)/', $line, $x)) $m[$x[1]] = (int) $x[2] * 1024;
         if (!empty($m['MemTotal'])) {
             $avail = isset($m['MemAvailable']) ? $m['MemAvailable'] : ((isset($m['MemFree']) ? $m['MemFree'] : 0) + (isset($m['Buffers']) ? $m['Buffers'] : 0) + (isset($m['Cached']) ? $m['Cached'] : 0));
-            $mem = array('total' => $m['MemTotal'], 'used' => max(0, $m['MemTotal'] - $avail), 'percent' => round(100 * max(0, $m['MemTotal'] - $avail) / $m['MemTotal'], 1));
+            $mem = array('total' => $m['MemTotal'], 'used' => max(0, $m['MemTotal'] - $avail), 'available' => max(0, $avail), 'percent' => round(100 * max(0, $m['MemTotal'] - $avail) / $m['MemTotal'], 1));
         }
     }
     $home = !empty($config['HOME_PATH']) && is_dir($config['HOME_PATH']) ? $config['HOME_PATH'] : (function_exists('posix_getpwuid') ? @posix_getpwuid(posix_geteuid())['dir'] : dirname(dirname(__DIR__)));
     $disk = null;
     $total = @disk_total_space($home);
     $free = @disk_free_space($home);
-    if ($total && $free !== false) $disk = array('total' => (int) $total, 'used' => (int) ($total - $free), 'percent' => round(100 * ($total - $free) / $total, 1));
+    if ($total && $free !== false) $disk = array('total' => (int) $total, 'used' => (int) ($total - $free), 'free' => (int) $free, 'percent' => round(100 * ($total - $free) / $total, 1));
     $net = null;
     $lines = @file('/proc/net/dev', FILE_IGNORE_NEW_LINES);
     if (is_array($lines)) {
@@ -91,7 +91,7 @@ function fqd_metrics($config) {
     $up = @file_get_contents('/proc/uptime');
     $uptime = $up !== false ? (int) floor((float) strtok($up, ' ')) : null;
     $load = function_exists('sys_getloadavg') ? @sys_getloadavg() : false;
-    return array('time' => time(), 'cpu' => $cpu, 'memory' => $mem, 'disk' => $disk, 'network' => $net, 'uptime' => $uptime, 'load' => is_array($load) ? $load : null,
+    $cpuInfo = @file('/proc/stat', FILE_IGNORE_NEW_LINES); $cpuCores = 0; if (is_array($cpuInfo)) foreach ($cpuInfo as $line) if (preg_match('/^cpu[0-9]+\\s/', $line)) $cpuCores++;\n    return array('time' => time(), 'cpu' => $cpu, 'cpu_cores' => $cpuCores, 'memory' => $mem, 'disk' => $disk, 'network' => $net, 'uptime' => $uptime, 'load' => is_array($load) ? $load : null, 'platform' => array('kernel' => php_uname('r'), 'system' => php_uname('s'), 'architecture' => php_uname('m'), 'php' => PHP_VERSION),
         'scope' => 'CPU, memory, network and load may be host-wide on shared hosting. Disk shows home filesystem capacity, not your Feral quota.');
 }
 if (isset($_GET['action']) && $_GET['action'] === 'metrics') {
@@ -157,10 +157,10 @@ a{color:inherit;text-decoration:none}.shell{min-height:100vh}.sidebar{position:f
     </a>
     <div class="sidebar-caption">CONTROL</div>
     <nav class="primary-nav">
-      <a class="nav-item is-active" href="#overview"><span class="nav-glyph">◫</span><span>Overview</span><i></i></a>
-      <a class="nav-item" href="#resources"><span class="nav-glyph">◉</span><span>Resources</span></a>
-      <a class="nav-item" href="#bandwidth"><span class="nav-glyph">⌁</span><span>Network monitor</span></a>
-      <a class="nav-item" href="#system"><span class="nav-glyph">⌘</span><span>System telemetry</span></a>
+      <a class="nav-item is-active" href="#overview" data-view-target="overview"><span class="nav-glyph">◫</span><span>Overview</span><i></i></a>
+      <a class="nav-item" href="#resources" data-view-target="resources"><span class="nav-glyph">◉</span><span>Resources</span></a>
+      <a class="nav-item" href="#bandwidth" data-view-target="network"><span class="nav-glyph">⌁</span><span>Network monitor</span></a>
+      <a class="nav-item" href="#system" data-view-target="system"><span class="nav-glyph">⌘</span><span>System telemetry</span></a>
     </nav>
     <div class="sidebar-spacer"></div>
     <div class="sidebar-status">
@@ -181,6 +181,7 @@ a{color:inherit;text-decoration:none}.shell{min-height:100vh}.sidebar{position:f
       </div>
     </header>
 
+    <div class="workspace-view is-visible" data-view="overview" id="view-overview">
     <section class="welcome-row">
       <div><div class="eyebrow"><span class="eyebrow-line"></span> YOUR HOSTING ENVIRONMENT</div><h2>Good to see you<span class="welcome-period">.</span></h2><p class="welcome-copy">Here’s what’s happening across your server right now.</p></div>
       <div class="refresh-status" id="updated"><span class="online-dot"></span><span>Establishing connection…</span></div>
@@ -232,6 +233,32 @@ a{color:inherit;text-decoration:none}.shell{min-height:100vh}.sidebar{position:f
 
     <section class="scope-banner"><span class="scope-symbol">i</span><div><strong>Shared-hosting visibility notice</strong><p id="scope">Some values may describe the shared host rather than only your account. Disk capacity is not a Feral quota measurement.</p></div><span class="scope-readonly">READ ONLY</span></section>
     <footer class="workspace-footer"><span><b>FERAL QUICKBOX</b> <i>·</i> PRIVATE SERVER DASHBOARD</span><span>ROOTLESS DEPLOYMENT <i>·</i> NO SERVICE CHANGES</span></footer>
+    </div>
+
+    <section class="workspace-view" data-view="resources" id="view-resources" hidden>
+      <div class="view-heading"><div><div class="eyebrow"><span class="eyebrow-line"></span> RESOURCE EXPLORER</div><h2>Resource details</h2><p>Live measurements reported by the host operating system.</p></div><span class="view-live"><span class="online-dot"></span> 5 SECOND POLL</span></div>
+      <div class="detail-grid">
+        <article class="detail-panel"><div class="detail-top"><span>PROCESSOR</span><b>CPU</b></div><strong class="detail-number" id="resource-cpu">—</strong><p>Host CPU utilization</p><div class="detail-stat"><span>Logical CPU cores</span><strong id="resource-cores">—</strong></div><div class="detail-stat"><span>Current load · 1 min</span><strong id="resource-load">—</strong></div></article>
+        <article class="detail-panel"><div class="detail-top"><span>MEMORY</span><b>RAM</b></div><strong class="detail-number" id="resource-memory">—</strong><p>Used memory / total memory</p><div class="detail-stat"><span>Available memory</span><strong id="resource-memory-free">—</strong></div><div class="detail-stat"><span>Memory usage</span><strong id="resource-memory-percent">—</strong></div></article>
+        <article class="detail-panel"><div class="detail-top"><span>FILESYSTEM</span><b>HOME FS</b></div><strong class="detail-number" id="resource-disk">—</strong><p>Used space / filesystem capacity</p><div class="detail-stat"><span>Free filesystem space</span><strong id="resource-disk-free">—</strong></div><div class="detail-stat"><span>Filesystem usage</span><strong id="resource-disk-percent">—</strong></div></article>
+      </div>
+      <div class="detail-callout"><strong>Measurement scope</strong><p>On shared hosting, CPU and memory figures may describe the host rather than your individual slot. Filesystem capacity is not a Feral account quota.</p></div>
+    </section>
+
+    <section class="workspace-view" data-view="network" id="view-network" hidden>
+      <div class="view-heading"><div><div class="eyebrow"><span class="eyebrow-line"></span> TRAFFIC INSPECTOR</div><h2>Network monitor</h2><p>Aggregate receive and transmit throughput sampled every five seconds.</p></div><span class="view-live"><span class="online-dot"></span> LIVE SAMPLING</span></div>
+      <article class="detail-panel network-detail-panel"><div class="detail-top"><span>THROUGHPUT HISTORY</span><b>LAST 2 MINUTES</b></div><div class="large-chart"><canvas id="network-chart-detail" role="img" aria-label="Detailed network throughput chart"></canvas></div><div class="network-detail-readouts"><div><span>DOWNLOAD</span><strong id="network-download-detail">—</strong></div><div><span>UPLOAD</span><strong id="network-upload-detail">—</strong></div></div></article>
+      <div class="detail-callout"><strong>Network scope</strong><p>Traffic is aggregated from visible non-loopback interfaces in <code>/proc/net/dev</code>. On a shared host, these values may include other users’ traffic. The chart history starts when this dashboard session opens.</p></div>
+    </section>
+
+    <section class="workspace-view" data-view="system" id="view-system" hidden>
+      <div class="view-heading"><div><div class="eyebrow"><span class="eyebrow-line"></span> HOST TELEMETRY</div><h2>System diagnostics</h2><p>Kernel and runtime information plus live load averages.</p></div><span class="view-live">READ ONLY</span></div>
+      <div class="detail-grid system-detail-grid">
+        <article class="detail-panel"><div class="detail-top"><span>LOAD AVERAGE</span><b>1 / 5 / 15 MIN</b></div><div class="load-detail-grid"><div><strong id="system-load-1">—</strong><span>1 MIN</span></div><div><strong id="system-load-5">—</strong><span>5 MIN</span></div><div><strong id="system-load-15">—</strong><span>15 MIN</span></div></div><p>Host-wide load average; not a per-account CPU percentage.</p></article>
+        <article class="detail-panel"><div class="detail-top"><span>PLATFORM</span><b>RUNTIME</b></div><div class="detail-stat"><span>Operating system</span><strong id="platform-system">—</strong></div><div class="detail-stat"><span>Kernel release</span><strong id="platform-kernel">—</strong></div><div class="detail-stat"><span>Architecture</span><strong id="platform-arch">—</strong></div><div class="detail-stat"><span>PHP runtime</span><strong id="platform-php">—</strong></div></article>
+      </div>
+      <div class="detail-callout"><strong>No service controls</strong><p>This dashboard remains read-only. It does not start, stop, restart, reconfigure or inspect qBittorrent, Deluge, Nginx or system services.</p></div>
+    </section>
   </main>
 </div>
 <script nonce="<?php echo htmlspecialchars($nonce, ENT_QUOTES, 'UTF-8'); ?>">
@@ -241,9 +268,9 @@ function el(id){return document.getElementById(id)}
 function bytes(n){if(!isFinite(n)||n<0)return '—';var u=['B','KB','MB','GB','TB'],i=0;while(n>=1024&&i<4){n/=1024;i++}return n.toFixed(i?1:0)+' '+u[i]}
 function percent(id,bar,obj,note,detail){var v=obj&&typeof obj.percent==='number'?obj.percent:null;el(id).innerHTML=v===null?'—<small>%</small>':v.toFixed(1)+'<small>%</small>';el(bar).style.width=(v===null?0:Math.max(0,Math.min(100,v)))+'%';if(note&&obj)el(note).textContent=bytes(obj.used)+' / '+bytes(obj.total);if(detail&&obj)el(detail).textContent=bytes(obj.used)+' of '+bytes(obj.total)}
 function uptime(s){if(typeof s!=='number')return '—';var d=Math.floor(s/86400),h=Math.floor(s%86400/3600),m=Math.floor(s%3600/60);return(d?d+'d ':'')+h+'h '+m+'m'}
-function chart(){var c=el('network-chart');if(!c)return;var w=c.clientWidth,h=c.clientHeight,dpr=Math.max(1,window.devicePixelRatio||1);c.width=Math.round(w*dpr);c.height=Math.round(h*dpr);var x=c.getContext('2d');x.scale(dpr,dpr);x.clearRect(0,0,w,h);var pad=8,plotH=h-18,plotW=w-pad*2,max=1;history.forEach(function(p){max=Math.max(max,p.rx,p.tx)});max*=1.2;for(var g=0;g<4;g++){var y=pad+(plotH/3)*g;x.beginPath();x.strokeStyle='rgba(137,155,184,.13)';x.lineWidth=1;x.moveTo(pad,y);x.lineTo(w-pad,y);x.stroke()}function line(key,color){if(history.length<2)return;x.beginPath();history.forEach(function(p,i){var px=pad+(plotW*i/(maxPoints-1)),py=pad+plotH-(p[key]/max)*plotH;if(i===0)x.moveTo(px,py);else x.lineTo(px,py)});x.strokeStyle=color;x.lineWidth=2;x.lineJoin='round';x.lineCap='round';x.stroke();var p=history[history.length-1],px=pad+(plotW*(history.length-1)/(maxPoints-1)),py=pad+plotH-(p[key]/max)*plotH;x.beginPath();x.arc(px,py,3,0,Math.PI*2);x.fillStyle=color;x.fill()}line('rx','#a895ff');line('tx','#69b9ff')}
-function poll(){fetch(base+'/?action=metrics',{credentials:'same-origin',cache:'no-store'}).then(function(r){if(r.status===401){location.reload();throw Error('session')}if(!r.ok)throw Error('http');return r.json()}).then(function(d){var m=d.metrics;el('cpu').innerHTML=m.cpu===null?'—<small>%</small>':m.cpu.toFixed(1)+'<small>%</small>';el('cpu-bar').style.width=(m.cpu===null?0:m.cpu)+'%';el('cpu-state').textContent=m.cpu===null?'Sampling…':'Live sample';el('cpu-detail').textContent=m.cpu===null?'First sample pending':m.cpu.toFixed(1)+'%';percent('mem','mem-bar',m.memory,'mem-note','mem-detail');percent('disk','disk-bar',m.disk,'disk-note','disk-detail');el('uptime').textContent=uptime(m.uptime);var l=m.load||[];el('l1').textContent=l.length?Number(l[0]).toFixed(2):'—';el('l5').textContent=l.length?Number(l[1]).toFixed(2):'—';el('l15').textContent=l.length?Number(l[2]).toFixed(2):'—';el('scope').textContent=m.scope;var now=Date.now(),rx=0,tx=0;if(m.network&&last){var dt=(now-last.t)/1000;if(dt>0&&dt<60){rx=Math.max(0,m.network.rx-last.rx)/dt;tx=Math.max(0,m.network.tx-last.tx)/dt}}if(m.network){last={rx:m.network.rx,tx:m.network.tx,t:now};el('rx').innerHTML=bytes(rx)+' <em>/s</em>';el('tx').innerHTML=bytes(tx)+' <em>/s</em>';history.push({rx:rx,tx:tx});if(history.length>maxPoints)history.shift();chart()}else{el('rx').textContent='Unavailable';el('tx').textContent='Unavailable'}el('updated').innerHTML='<span class="online-dot"></span>Updated '+new Date(m.time*1000).toLocaleTimeString()}).catch(function(e){if(e.message!=='session')el('updated').textContent='Connection issue · retrying'})}
-poll();var timer=setInterval(poll,5000);window.addEventListener('resize',chart);window.addEventListener('beforeunload',function(){clearInterval(timer)})
+function chartOne(id){var c=el(id);if(!c||!c.clientWidth)return;var w=c.clientWidth,h=c.clientHeight,dpr=Math.max(1,window.devicePixelRatio||1);c.width=Math.round(w*dpr);c.height=Math.round(h*dpr);var x=c.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,w,h);var pad=8,plotH=h-18,plotW=w-pad*2,max=1;history.forEach(function(p){max=Math.max(max,p.rx,p.tx)});max*=1.2;for(var g=0;g<4;g++){var y=pad+(plotH/3)*g;x.beginPath();x.strokeStyle='rgba(137,155,184,.13)';x.lineWidth=1;x.moveTo(pad,y);x.lineTo(w-pad,y);x.stroke()}function line(key,color){if(history.length<2)return;x.beginPath();history.forEach(function(p,i){var px=pad+(plotW*i/Math.max(1,history.length-1)),py=pad+plotH-(p[key]/max)*plotH;if(i===0)x.moveTo(px,py);else x.lineTo(px,py)});x.strokeStyle=color;x.lineWidth=2;x.lineJoin='round';x.lineCap='round';x.stroke();var p=history[history.length-1],px=pad+plotW,py=pad+plotH-(p[key]/max)*plotH;x.beginPath();x.arc(px,py,3,0,Math.PI*2);x.fillStyle=color;x.fill()}line('rx','#a895ff');line('tx','#69b9ff')}function chart(){chartOne('network-chart');chartOne('network-chart-detail')}
+function poll(){fetch(base+'/?action=metrics',{credentials:'same-origin',cache:'no-store'}).then(function(r){if(r.status===401){location.reload();throw Error('session')}if(!r.ok)throw Error('http');return r.json()}).then(function(d){var m=d.metrics;el('cpu').innerHTML=m.cpu===null?'—<small>%</small>':m.cpu.toFixed(1)+'<small>%</small>';el('cpu-bar').style.width=(m.cpu===null?0:m.cpu)+'%';el('cpu-state').textContent=m.cpu===null?'Sampling…':'Live sample';el('cpu-detail').textContent=m.cpu===null?'First sample pending':m.cpu.toFixed(1)+'%';percent('mem','mem-bar',m.memory,'mem-note','mem-detail');percent('disk','disk-bar',m.disk,'disk-note','disk-detail');el('uptime').textContent=uptime(m.uptime);var l=m.load||[];el('l1').textContent=l.length?Number(l[0]).toFixed(2):'—';el('l5').textContent=l.length?Number(l[1]).toFixed(2):'—';el('l15').textContent=l.length?Number(l[2]).toFixed(2):'—';put('system-load-1',l.length?Number(l[0]).toFixed(2):'—');put('system-load-5',l.length?Number(l[1]).toFixed(2):'—');put('system-load-15',l.length?Number(l[2]).toFixed(2):'—');el('scope').textContent=m.scope;\nfunction put(id,value){var node=el(id);if(node)node.textContent=value}\nput('resource-cpu',m.cpu===null?'Waiting for sample':m.cpu.toFixed(1)+'%');put('resource-cores',m.cpu_cores||'Unavailable');put('resource-load',m.load&&m.load.length?Number(m.load[0]).toFixed(2):'Unavailable');put('resource-memory',m.memory?bytes(m.memory.used)+' / '+bytes(m.memory.total):'Unavailable');put('resource-memory-free',m.memory?bytes(m.memory.available):'Unavailable');put('resource-memory-percent',m.memory?m.memory.percent.toFixed(1)+'%':'Unavailable');put('resource-disk',m.disk?bytes(m.disk.used)+' / '+bytes(m.disk.total):'Unavailable');put('resource-disk-free',m.disk?bytes(m.disk.free):'Unavailable');put('resource-disk-percent',m.disk?m.disk.percent.toFixed(1)+'%':'Unavailable');var platform=m.platform||{};put('platform-system',platform.system||'Unavailable');put('platform-kernel',platform.kernel||'Unavailable');put('platform-arch',platform.architecture||'Unavailable');put('platform-php',platform.php||'Unavailable');var now=Date.now(),rx=0,tx=0;if(m.network&&last){var dt=(now-last.t)/1000;if(dt>0&&dt<60){rx=Math.max(0,m.network.rx-last.rx)/dt;tx=Math.max(0,m.network.tx-last.tx)/dt}}if(m.network){last={rx:m.network.rx,tx:m.network.tx,t:now};el('rx').innerHTML=bytes(rx)+' <em>/s</em>';el('tx').innerHTML=bytes(tx)+' <em>/s</em>';history.push({rx:rx,tx:tx});if(history.length>maxPoints)history.shift();chart();put('network-download-detail',bytes(rx)+'/s');put('network-upload-detail',bytes(tx)+'/s');}else{el('rx').textContent='Unavailable';el('tx').textContent='Unavailable'}el('updated').innerHTML='<span class="online-dot"></span>Updated '+new Date(m.time*1000).toLocaleTimeString()}).catch(function(e){if(e.message!=='session')el('updated').textContent='Connection issue · retrying'})}
+var nav=document.querySelectorAll('[data-view-target]');function showView(name){document.querySelectorAll('[data-view]').forEach(function(v){var active=v.getAttribute('data-view')===name;v.hidden=!active;v.classList.toggle('is-visible',active)});nav.forEach(function(a){var active=a.getAttribute('data-view-target')===name;a.classList.toggle('is-active',active);if(active)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current')});var title={overview:'System overview',resources:'Resource details',network:'Network monitor',system:'System diagnostics'};var h=document.querySelector('.topbar h1');if(h)h.textContent=title[name]||title.overview;var crumb=document.querySelector('.breadcrumb');if(crumb)crumb.innerHTML='WORKSPACE <span>/</span> '+(name==='network'?'NETWORK':name.toUpperCase());if(name==='network')chart()}nav.forEach(function(a){a.addEventListener('click',function(e){e.preventDefault();showView(a.getAttribute('data-view-target'))})});var menu=document.querySelector('.mobile-menu');if(menu)menu.addEventListener('click',function(){document.querySelector('.app-sidebar').classList.toggle('mobile-nav-open')});poll();var timer=setInterval(poll,5000);window.addEventListener('resize',chart);window.addEventListener('beforeunload',function(){clearInterval(timer)})
 }());
 </script>
 <?php endif; ?></body></html>
