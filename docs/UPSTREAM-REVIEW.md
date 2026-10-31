@@ -25,7 +25,7 @@ The upstream dashboard README describes the package-management center and servic
 | `src/controllers/dashboard.tsx` and `src/widgets/package-management-center.tsx` | Renders package and service management UI | Do not show controls that cannot safely work |
 | `src/handlers/exec.ts` | Default DB path is `/srv/dashboard/db`; username data is expected from QuickBox-specific setup | Move runtime state to XDG user directories and remove dependency on master.txt |
 | `src/widgets/disk-data.tsx` | Uses `/install/*.lock` and `/home/<username>` assumptions | Must use explicitly configured, slot-owned paths |
-| `src/widgets/memory-stats.tsx` / `src/widgets/load.ts` | Reads systeminformation and OS-wide metrics | On a shared host, these may be host-level rather than slot-level; label scope honestly |
+| `src/widgets/memory-stats.tsx` / `src/widgets/load.ts` | Reads systeminformation and OS-wide metrics; the memory widget's clear-cache button also invokes a QuickBox `box` command | On a shared host, metrics may be host-level rather than slot-level; remove the cache-clearing action and label scope honestly |
 
 ## Security boundary
 
