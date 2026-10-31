@@ -1,40 +1,31 @@
 # Roadmap
 
 ## Phase 0 — safe foundation
-- [x] Establish a rootless-only repository scaffold.
-- [x] Add conservative install/uninstall scripts.
-- [x] Add CI validation and security guidance.
-- [x] Review the QuickBox Lite backend and document privileged assumptions.
-- [x] Audit the Classic QuickBox dashboard as the Lite UI/feature lineage reference.
-- [x] Document upstream GPL compatibility before source reuse.
-- [x] Add a read-only Feral environment preflight script.
-- [ ] Validate the preflight on an actual Feral shared slot.
+- [x] Rootless repository scaffold, safe bootstrap and CI.
+- [x] QuickBox Lite backend compatibility review and Classic UI reference audit.
+- [x] Read-only Feral preflight script and live environment review.
 
-## Phase 1 — upstream dashboard compatibility
-- [x] Pin and document the reviewed QuickBox Lite upstream revision.
-- [ ] Review every backend route, shell command, dependency, and privileged operation.
-- [ ] Separate the frontend from the upstream systemd service assumptions.
-- [ ] Replace system-wide service management with user-owned process controls.
-- [ ] Confirm Node.js availability and a persistent-process method on Feral.
+## Phase 1 — rootless web MVP
+- [x] PHP-only dashboard for existing PHP-FPM vhosts.
+- [x] Subdirectory deployment at `/Feral-Quickbox-Dashboard/`.
+- [x] Private password hash, session authentication and CSRF-protected forms.
+- [x] Marked-directory install/upgrade/uninstall.
+- [ ] Verify deployment through the live Feral public URL.
 
 ## Phase 2 — read-only monitoring
-- [ ] CPU and memory metrics with clear unavailable states.
-- [ ] Disk usage limited to user-visible paths.
-- [ ] Network/interface metrics only where readable and meaningful.
-- [ ] No expensive polling loops; configurable polling interval.
+- [x] CPU, memory, home filesystem, network, load and uptime.
+- [x] Disclose host-vs-slot scope and filesystem-vs-quota limitation.
+- [ ] Validate metric accuracy across Feral slot layouts.
 
 ## Phase 3 — application integrations
-- [ ] qBittorrent Web API integration using user-provided local endpoint.
-- [ ] Deluge RPC integration using user-provided local endpoint.
-- [ ] Never expose API credentials to browser-side code.
+- [ ] qBittorrent Web API with server-side credentials.
+- [ ] Deluge RPC with server-side credentials.
 - [ ] Redact credentials and tokens from logs.
 
 ## Phase 4 — controlled actions
-- [ ] Explicit allow-list of user-owned start/stop scripts.
-- [ ] Validate executable paths and reject arbitrary command input.
-- [ ] Show action result and process state honestly.
+- [ ] Allow-list only named, user-owned scripts.
+- [ ] Reject arbitrary command input and show action results honestly.
 
 ## Phase 5 — release readiness
-- [ ] Test install, upgrade, restart, and uninstall on Feral.
-- [ ] Test supported shells and Node.js versions.
-- [ ] Security review, dependency audit, documentation, and tagged release.
+- [ ] Live Feral install/upgrade/uninstall testing.
+- [ ] Security review, compatibility matrix and tagged release.

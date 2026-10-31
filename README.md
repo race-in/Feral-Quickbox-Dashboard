@@ -2,84 +2,50 @@
 
 # Feral Quickbox Dashboard
 
-**A rootless dashboard experiment for Feral Hosting shared slots.**
+**A rootless monitoring dashboard for Feral Hosting shared slots.**
 
-[![ShellCheck](https://github.com/race-in/Feral-Quickbox-Dashboard/actions/workflows/ci.yml/badge.svg)](https://github.com/race-in/Feral-Quickbox-Dashboard/actions/workflows/ci.yml)
+[![CI](https://github.com/race-in/Feral-Quickbox-Dashboard/actions/workflows/ci.yml/badge.svg)](https://github.com/race-in/Feral-Quickbox-Dashboard/actions/workflows/ci.yml)
 [![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](LICENSE)
 
 </div>
 
-> **Status: Experimental — initial compatibility scaffold.** No claim is made yet that the dashboard has been tested on a live Feral slot.
+> **Status: Experimental MVP.** The PHP monitoring app and integration smoke test are implemented. A live Feral deployment and public-URL verification are still pending.
 
-Feral Quickbox Dashboard is a user-space adaptation project inspired by the dashboard in [QuickBox Lite](https://github.com/amefs/quickbox-lite). The goal is to evaluate and adapt its dashboard experience for shared hosting where root access and system-wide service managers are unavailable.
+A QuickBox-inspired, independent dashboard designed for rootless shared hosting. The first version uses the existing PHP-FPM web stack and is intended to open at `/Feral-Quickbox-Dashboard/` below the user's existing domain.
 
-## Project principles
+## Features
 
-- **Rootless by design:** install and run as the slot user; never request `sudo` or root.
-- **Non-destructive:** do not overwrite existing application configuration or service files.
-- **Least privilege:** bind only to loopback by default and avoid privileged ports.
-- **Feral-aware:** use documented host capabilities rather than assuming systemd, apt, Nginx, or unrestricted process control.
-- **Transparent:** clearly report unsupported features instead of pretending they work.
+- PHP-only runtime: no Node.js, npm, daemon, or extra TCP listener.
+- Private password login with session-protected metrics endpoint and CSRF-protected login/logout.
+- Live CPU, memory, home-filesystem, network, load-average and uptime metrics.
+- Responsive dark interface; no third-party frontend dependencies.
+- Rootless and non-destructive: no sudo, apt, systemd, Nginx edits, service restarts, or torrent-client changes.
 
-## What this project will and will not do
+Host-level values may describe the shared server, not only the account. Disk reports filesystem capacity and is not a Feral quota measurement. These limits are disclosed in the UI.
 
-| Area | Direction |
-| --- | --- |
-| Dashboard UI | Adapt the upstream dashboard frontend after compatibility review |
-| Host metrics | Detect available, user-readable metrics; show unavailable values honestly |
-| qBittorrent / Deluge | Integrate through their existing APIs where configured |
-| Process controls | Use explicit user-owned commands only; no system-wide service control |
-| Package manager | Out of scope on shared hosting |
-| Nginx / firewall / system services | Out of scope; require provider/root administration |
+## Install
 
-## Current stage
+Run as the Feral slot user. Replace the host with the exact folder under `~/www/`:
 
-This first commit establishes the project structure, safe installer/uninstaller foundations, and CI checks. It does **not** install the upstream QuickBox Lite dashboard yet. That integration will happen only after the original backend dependencies and privileged operations have been reviewed and replaced.
+    git clone https://github.com/race-in/Feral-Quickbox-Dashboard.git
+    cd Feral-Quickbox-Dashboard
+    bash scripts/feral-preflight.sh
+    bash install.sh --webroot "$HOME/www/your-hostname.feralhosting.com/public_html"
 
-## Requirements
+On first deployment the installer asks for a 12–72 byte password and stores only its hash outside the public document root.
 
-- Linux shell environment with Bash
-- `curl` or `wget` for future source downloads
-- A user-writable home directory
-- An available unprivileged TCP port
-- Optional: Node.js (the dashboard runtime will be selected after upstream compatibility testing)
+Open:
 
-## Quick start
+    https://your-hostname.feralhosting.com/Feral-Quickbox-Dashboard/
 
-Clone the repository and inspect the installer:
+See [Feral deployment guide](docs/FERAL-DEPLOYMENT.md) for upgrades and removal.
 
-```bash
-git clone https://github.com/race-in/Feral-Quickbox-Dashboard.git
-cd Feral-Quickbox-Dashboard
-bash scripts/feral-preflight.sh
-bash install.sh
-```
+## Current scope
 
-The installer is intentionally conservative. The current bootstrap creates user-owned XDG directories and a private configuration template; it does not download upstream files or start a dashboard server yet. Use `bash uninstall.sh` to remove application data, or `bash uninstall.sh --purge` to also remove configuration and cache after confirmation.
+qBittorrent/Deluge API integration, service controls and arbitrary process actions are deliberately not included in this MVP. No torrent-client configuration is read or changed.
 
-## Configuration
+## Upstream and license
 
-The future runtime configuration will live under the user's home directory, not in `/etc`:
+Inspired by the QuickBox Lite dashboard and Classic QuickBox UI lineage. No upstream source or third-party assets are copied into the current MVP. Any future upstream-derived code must retain applicable notices and comply with GPL terms. See [upstream review](docs/UPSTREAM-REVIEW.md), [Classic reference audit](docs/CLASSIC-QUICKBOX-REFERENCE.md), and [security model](docs/SECURITY.md).
 
-```text
-~/.config/feral-quickbox/config.env
-~/.local/share/feral-quickbox/
-~/.cache/feral-quickbox/
-```
-
-See [docs/ROADMAP.md](docs/ROADMAP.md), [docs/SECURITY.md](docs/SECURITY.md), the [QuickBox Lite compatibility review](docs/UPSTREAM-REVIEW.md), and the [QuickBox Classic dashboard reference audit](docs/CLASSIC-QUICKBOX-REFERENCE.md). Run `bash scripts/feral-preflight.sh` on the slot to collect non-invasive environment diagnostics before any dashboard runtime is installed.
-
-## Upstream acknowledgement and licensing
-
-This project is inspired by and intends to adapt parts of the QuickBox Lite dashboard from [amefs/quickbox-lite](https://github.com/amefs/quickbox-lite), which is licensed under **GNU GPL v3 or later**. The upstream project and its authors retain their copyrights. Any upstream-derived code incorporated here will retain the applicable copyright notices and GPL terms. This repository's licensing and attribution will be updated alongside each upstream-derived component.
-
-- Upstream repository: https://github.com/amefs/quickbox-lite
-- Upstream dashboard notes: https://github.com/amefs/quickbox-lite/tree/master/setup/dashboard
-
-## Contributing
-
-Please open an issue before proposing changes that affect process control, authentication, network exposure, or application credentials. Never submit real slot credentials, API passwords, cookies, or private tracker details.
-
-## Disclaimer
-
-This is an independent community adaptation project. It is not affiliated with or endorsed by Feral Hosting or the QuickBox Lite maintainers. Use at your own risk and follow your hosting provider's terms.
+Independent community project; not affiliated with Feral Hosting or QuickBox maintainers.
