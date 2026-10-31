@@ -51,6 +51,12 @@ Other older source constructs also require a security pass before any reuse: she
 5. Add controls only for explicit user-owned scripts with fixed executable paths, validated arguments, and no shell interpolation.
 6. Pin upstream revisions, preserve file-level notices, include full GPLv3-or-later text, and audit third-party asset licenses before vendoring.
 
+## Licensing note
+
+The GitHub repository metadata identifies QuickBox/QB as **GPL-3.0** (GPL version 3 only), and its root license file is `LICENSE.md`. QuickBox Lite's dashboard package declares **GPL-3.0-or-later**. This initial Feral repository currently carries a GPL-3.0-or-later notice, but no Classic dashboard source files or binary assets have been copied into it as part of this review.
+
+Before importing or adapting actual Classic QuickBox source code, reconcile the whole combined derivative under GPL-3.0 (version 3), preserve original copyright/license notices, and audit each bundled third-party asset separately. GPL-3.0-or-later components can be used under GPL version 3; the GPL-3.0-only Classic source cannot be relicensed as a whole under an "or later" grant merely by combining it with Lite code.
+
 ## Conclusion
 
 The Classic dashboard is useful and arguably the better visual/layout reference; QuickBox Lite is the closer technical starting point for its modern dashboard rendering. Neither upstream backend can be installed unchanged on a Feral shared slot. The project should combine Classic's UI ideas with selected Lite presentation components and a purpose-built rootless backend.
