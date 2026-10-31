@@ -19,15 +19,16 @@ jobs:
       - name: Install ShellCheck
         run: sudo apt-get update && sudo apt-get install --yes shellcheck
       - name: Bash syntax
-        run: bash -n install.sh uninstall.sh tests/smoke.sh
+        run: bash -n install.sh uninstall.sh tests/smoke.sh scripts/feral-preflight.sh
       - name: ShellCheck
-        run: shellcheck --severity=style install.sh uninstall.sh tests/smoke.sh
+        run: shellcheck --severity=style install.sh uninstall.sh tests/smoke.sh scripts/feral-preflight.sh
       - name: Installer and uninstaller smoke tests
         run: bash tests/smoke.sh
       - name: Help output
         run: |
           bash install.sh --help
           bash uninstall.sh --help
+          bash scripts/feral-preflight.sh --help
 
   repository-hygiene:
     name: Repository hygiene
@@ -43,3 +44,5 @@ jobs:
           test -s NOTICE
           test -s docs/SECURITY.md
           test -s docs/ROADMAP.md
+          test -s docs/UPSTREAM-REVIEW.md
+          test -s scripts/feral-preflight.sh
