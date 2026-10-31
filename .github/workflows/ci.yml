@@ -47,4 +47,5 @@ jobs:
           test -s docs/SECURITY.md
           test -s docs/ROADMAP.md
           test -s docs/UPSTREAM-REVIEW.md
+          test -s docs/CLASSIC-QUICKBOX-REFERENCE.md
           test -s scripts/feral-preflight.sh
