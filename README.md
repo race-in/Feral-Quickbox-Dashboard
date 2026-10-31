@@ -51,11 +51,11 @@ Clone the repository and inspect the installer:
 ```bash
 git clone https://github.com/race-in/Feral-Quickbox-Dashboard.git
 cd Feral-Quickbox-Dashboard
-bash install.sh --help
 bash scripts/feral-preflight.sh
+bash install.sh
 ```
 
-The installer is intentionally conservative. The initial scaffold only creates a project-owned directory and configuration template; it does not start a dashboard server.
+The installer is intentionally conservative. The current bootstrap creates user-owned XDG directories and a private configuration template; it does not download upstream files or start a dashboard server yet. Use `bash uninstall.sh` to remove application data, or `bash uninstall.sh --purge` to also remove configuration and cache after confirmation.
 
 ## Configuration
 
