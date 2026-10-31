@@ -35,7 +35,7 @@ grep -q 'network-chart' "$tmp/dashboard"
 grep -q 'Network activity' "$tmp/dashboard"
 grep -q 'resource-grid' "$tmp/dashboard"
 grep -q 'monitor-grid' "$tmp/dashboard"
-grep -q 'SYSTEM DIAGNOSTICS' "$tmp/dashboard"
+grep -q 'SYSTEM DIAGNOSTICS' "$tmp/dashboard"\ngrep -q 'data-view-target="resources"' "$tmp/dashboard"\ngrep -q 'data-view-target="network"' "$tmp/dashboard"\ngrep -q 'data-view-target="system"' "$tmp/dashboard"\ngrep -q 'data-view="resources"' "$tmp/dashboard"\ngrep -q 'data-view="network"' "$tmp/dashboard"\ngrep -q 'data-view="system"' "$tmp/dashboard"\ngrep -q 'network-chart-detail' "$tmp/dashboard"\ngrep -q 'platform-kernel' "$tmp/dashboard"\ngrep -q 'cpu_cores' "$tmp/dashboard"
 [[ "$(grep -o 'id=\"mem-detail\"' "$tmp/dashboard" | wc -l)" -eq 1 ]]
 [[ "$(grep -o 'id=\"disk-detail\"' "$tmp/dashboard" | wc -l)" -eq 1 ]]
 csrf="$(sed -n 's/.*name="csrf" value="\([a-f0-9]*\)".*/\1/p' "$tmp/dashboard" | head -1)"
