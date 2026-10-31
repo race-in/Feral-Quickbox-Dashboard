@@ -14,13 +14,15 @@ The script does not install packages, create files, start services, or change se
 EOF
 }
 
-while (($#)); do
-  case "$1" in
-    --help|-h) usage; exit 0 ;;
-    *) printf 'ERROR: Unknown option: %s\n' "$1" >&2; usage >&2; exit 2 ;;
-  esac
-  shift
-done
+if (($# > 0)); then
+  if (($# == 1)) && [[ "$1" == "--help" || "$1" == "-h" ]]; then
+    usage
+    exit 0
+  fi
+  printf 'ERROR: Unknown or unsupported arguments.\n' >&2
+  usage >&2
+  exit 2
+fi
 
 printf '%s\n' 'Feral Quickbox Dashboard — rootless preflight'
 printf '%s\n' '=============================================='
