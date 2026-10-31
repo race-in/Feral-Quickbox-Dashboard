@@ -5,6 +5,8 @@
 - [x] Add conservative install/uninstall scripts.
 - [x] Add CI validation and security guidance.
 - [x] Review the QuickBox Lite backend and document privileged assumptions.
+- [x] Audit the Classic QuickBox dashboard as the Lite UI/feature lineage reference.
+- [x] Document upstream GPL compatibility before source reuse.
 - [x] Add a read-only Feral environment preflight script.
 - [ ] Validate the preflight on an actual Feral shared slot.
 
