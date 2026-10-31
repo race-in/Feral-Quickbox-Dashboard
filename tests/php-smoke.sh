@@ -30,7 +30,7 @@ csrf="$(sed -n 's/.*name="csrf" value="\([a-f0-9]*\)".*/\1/p' "$tmp/login" | hea
 curl -sS -D "$tmp/headers" -o /dev/null -b "$tmp/cookies" -c "$tmp/cookies" --data-urlencode "csrf=$csrf" --data-urlencode 'password=SmokeTestPassword123!' "$url"
 grep -q 303 "$tmp/headers"
 curl -fsS -b "$tmp/cookies" "$url" -o "$tmp/dashboard"
-grep -q 'Welcome to your slot' "$tmp/dashboard"
+grep -q 'Good to see you' "$tmp/dashboard"
 grep -q 'network-chart' "$tmp/dashboard"
 grep -q 'Network activity' "$tmp/dashboard"
 grep -q 'resource-grid' "$tmp/dashboard"
