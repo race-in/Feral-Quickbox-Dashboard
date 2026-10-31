@@ -149,24 +149,91 @@ a{color:inherit;text-decoration:none}.shell{min-height:100vh}.sidebar{position:f
 <main class="login"><section class="loginbox"><div class="login-logo">FQ</div><p class="eyebrow">FERAL HOSTING · PRIVATE CONSOLE</p><h1>Welcome back<span style="color:#a99aff">.</span></h1><p class="muted">Sign in to view your private slot dashboard.</p><?php if ($error !== ''): ?><p class="alert" role="alert"><?php echo htmlspecialchars($error, ENT_QUOTES, 'UTF-8'); ?></p><?php endif; ?>
 <form method="post" action="<?php echo htmlspecialchars($base . '/', ENT_QUOTES, 'UTF-8'); ?>"><input type="hidden" name="csrf" value="<?php echo htmlspecialchars($csrf, ENT_QUOTES, 'UTF-8'); ?>"><label for="pw">Dashboard password</label><input id="pw" name="password" type="password" minlength="12" maxlength="72" autocomplete="current-password" required autofocus><button type="submit">Sign in&nbsp; →</button></form><p class="fine">Private read-only monitoring · No system changes</p></section></main>
 <?php else: ?>
-<div class="shell">
-<aside class="sidebar"><div class="brand"><div class="brand-mark">FQ</div><div><div class="brand-name">Feral<span>Quickbox</span></div><div class="brand-sub">SLOT CONTROL CENTER</div></div></div><p class="nav-label">WORKSPACE</p><a class="nav-link active" href="#overview"><span class="nav-icon">▦</span>Overview</a><a class="nav-link" href="#bandwidth"><span class="nav-icon">⌁</span>Network activity</a><a class="nav-link" href="#system"><span class="nav-icon">◈</span>System health</a><div class="side-bottom"><strong><span class="online-dot"></span>Monitoring active</strong><span>Read-only mode is enabled. Your existing torrent services and server configuration are untouched.</span></div></aside>
-<main class="main" id="overview">
-<header class="topbar"><div><div class="crumb">FERAL HOSTING / OVERVIEW</div><h1>Dashboard</h1></div><div class="top-actions"><span class="host-pill"><span class="online-dot"></span><?php echo htmlspecialchars($host, ENT_QUOTES, 'UTF-8'); ?></span><form style="display:inline" method="post" action="<?php echo htmlspecialchars($base . '/', ENT_QUOTES, 'UTF-8'); ?>"><input type="hidden" name="csrf" value="<?php echo htmlspecialchars($csrf, ENT_QUOTES, 'UTF-8'); ?>"><button class="logout" name="logout" value="1">Sign out</button></form></div></header>
-<section class="intro"><div><h2>Welcome to your slot</h2><p class="muted">A live snapshot of system performance and resource activity.</p></div><p class="updated" id="updated"><span class="online-dot"></span>Connecting to host…</p></section>
-<section class="metrics" aria-label="Resource usage">
-<article class="metric" style="--accent:#a895ff;--glow:#a895ff"><div class="metric-head"><span class="metric-label">CPU usage</span><span class="metric-icon">⌘</span></div><div class="metric-value" id="cpu">—<small>%</small></div><div class="meter"><i id="cpu-bar"></i></div><div class="metric-foot"><span>Host processor</span><span id="cpu-state">Sampling…</span></div></article>
-<article class="metric" style="--accent:#69b9ff;--glow:#69b9ff"><div class="metric-head"><span class="metric-label">Memory usage</span><span class="metric-icon">▤</span></div><div class="metric-value" id="mem">—<small>%</small></div><div class="meter"><i id="mem-bar"></i></div><div class="metric-foot"><span>RAM utilization</span><span id="mem-note">Waiting…</span></div></article>
-<article class="metric" style="--accent:#55d6a2;--glow:#55d6a2"><div class="metric-head"><span class="metric-label">Home filesystem</span><span class="metric-icon">▣</span></div><div class="metric-value" id="disk">—<small>%</small></div><div class="meter"><i id="disk-bar"></i></div><div class="metric-foot"><span>Filesystem usage</span><span id="disk-note">Not quota</span></div></article>
-<article class="metric" style="--accent:#f2bd6b;--glow:#f2bd6b"><div class="metric-head"><span class="metric-label">Host uptime</span><span class="metric-icon">◷</span></div><div class="metric-value" id="uptime">—</div><div class="meter"><i class="uptime-meter"></i></div><div class="metric-foot"><span>Since last boot</span><span>Host-level</span></div></article>
-</section>
-<section class="content-grid">
-<article class="panel" id="bandwidth"><div class="panel-head"><div><p class="panel-kicker">TRAFFIC MONITOR</p><h3>Network activity</h3></div><span class="live-tag"><span class="online-dot"></span>LIVE · 5 SEC</span></div><div class="chart-wrap"><canvas id="network-chart" role="img" aria-label="Recent download and upload throughput chart"></canvas></div><div class="chart-legend"><span><i class="legend-dot legend-down"></i>Download</span><span><i class="legend-dot legend-up"></i>Upload</span></div><div class="bandwidth"><div class="band"><span>↓ DOWNLOAD SPEED</span><strong id="rx">— <em>/s</em></strong></div><div class="band"><span>↑ UPLOAD SPEED</span><strong id="tx">— <em>/s</em></strong></div></div></article>
-<article class="panel" id="system"><div class="panel-head"><div><p class="panel-kicker">HOST TELEMETRY</p><h3>System health</h3></div><span class="metric-icon">◈</span></div><div class="load-grid"><div class="load-cell"><strong id="l1">—</strong><span>1 minute</span></div><div class="load-cell"><strong id="l5">—</strong><span>5 minutes</span></div><div class="load-cell"><strong id="l15">—</strong><span>15 minutes</span></div></div><div class="system-meta"><div class="meta-row"><span>CPU sample</span><strong id="cpu-detail">Waiting</strong></div><div class="meta-row"><span>Memory</span><strong id="mem-detail">Waiting</strong></div><div class="meta-row"><span>Disk</span><strong id="disk-detail">Waiting</strong></div><div class="meta-row"><span>Refresh interval</span><strong>5 seconds</strong></div></div></article>
-</section>
-<div class="notice"><span class="notice-icon">i</span><div><strong>Shared-hosting metric scope</strong><span id="scope">Some values may describe the shared host rather than only your account. Disk capacity is not a Feral quota measurement.</span></div></div>
-<footer class="footer"><span>Feral Quickbox Dashboard <span aria-hidden="true">·</span> Phase 1 monitoring</span><span>Rootless deployment <span aria-hidden="true">·</span> Read-only <span aria-hidden="true">·</span> Auto refresh enabled</span></footer>
-</main></div>
+<div class="app-shell">
+  <aside class="app-sidebar" aria-label="Primary navigation">
+    <a class="brand-lockup" href="#overview" aria-label="Feral Quickbox home">
+      <span class="brand-symbol">FQ<span class="brand-symbol-dot"></span></span>
+      <span class="brand-copy"><strong>FERAL<span>QUICKBOX</span></strong><small>SERVER CONTROL PLANE</small></span>
+    </a>
+    <div class="sidebar-caption">CONTROL</div>
+    <nav class="primary-nav">
+      <a class="nav-item is-active" href="#overview"><span class="nav-glyph">◫</span><span>Overview</span><i></i></a>
+      <a class="nav-item" href="#resources"><span class="nav-glyph">◉</span><span>Resources</span></a>
+      <a class="nav-item" href="#bandwidth"><span class="nav-glyph">⌁</span><span>Network monitor</span></a>
+      <a class="nav-item" href="#system"><span class="nav-glyph">⌘</span><span>System telemetry</span></a>
+    </nav>
+    <div class="sidebar-spacer"></div>
+    <div class="sidebar-status">
+      <div class="status-orbit"><span></span></div>
+      <div><strong>Monitor online</strong><small>Read-only session</small></div>
+      <span class="status-check">✓</span>
+    </div>
+    <div class="sidebar-foot">FQ DASHBOARD <span>·</span> PHASE 01</div>
+  </aside>
+
+  <main class="workspace" id="overview">
+    <header class="topbar">
+      <div class="topbar-left"><button class="mobile-menu" type="button" aria-label="Menu">☰</button><div><div class="breadcrumb">WORKSPACE <span>/</span> OVERVIEW</div><h1>System overview</h1></div></div>
+      <div class="topbar-right">
+        <div class="connection-state"><span class="online-dot"></span><span>LIVE MONITORING</span></div>
+        <div class="host-chip"><span class="host-chip-icon">⌂</span><span><?php echo htmlspecialchars($host, ENT_QUOTES, 'UTF-8'); ?></span></div>
+        <form class="logout-form" method="post" action="<?php echo htmlspecialchars($base . '/', ENT_QUOTES, 'UTF-8'); ?>"><input type="hidden" name="csrf" value="<?php echo htmlspecialchars($csrf, ENT_QUOTES, 'UTF-8'); ?>"><button class="logout" name="logout" value="1">Sign out <span>↗</span></button></form>
+      </div>
+    </header>
+
+    <section class="welcome-row">
+      <div><div class="eyebrow"><span class="eyebrow-line"></span> YOUR HOSTING ENVIRONMENT</div><h2>Good to see you<span class="welcome-period">.</span></h2><p class="welcome-copy">Here’s what’s happening across your server right now.</p></div>
+      <div class="refresh-status" id="updated"><span class="online-dot"></span><span>Establishing connection…</span></div>
+    </section>
+
+    <section class="resource-section" id="resources" aria-label="Resource utilization">
+      <div class="section-heading"><div><span class="section-index">01</span><h3>Resource utilization</h3></div><span class="section-note">LIVE HOST METRICS</span></div>
+      <div class="resource-grid">
+        <article class="resource-card cpu-card">
+          <div class="resource-card-top"><span class="resource-name"><span class="resource-icon">⌘</span> PROCESSOR</span><span class="resource-tag">CPU</span></div>
+          <div class="resource-main"><div class="resource-reading" id="cpu">—<small>%</small></div><div class="resource-orb cpu-orb"><span>CPU</span><b>CORE</b></div></div>
+          <div class="resource-track"><i id="cpu-bar"></i></div><div class="resource-bottom"><span>Host processor load</span><strong id="cpu-state">Sampling…</strong></div>
+        </article>
+        <article class="resource-card memory-card">
+          <div class="resource-card-top"><span class="resource-name"><span class="resource-icon">▤</span> MEMORY</span><span class="resource-tag">RAM</span></div>
+          <div class="resource-main"><div class="resource-reading" id="mem">—<small>%</small></div><div class="resource-orb memory-orb"><span>RAM</span><b>MEM</b></div></div>
+          <div class="resource-track"><i id="mem-bar"></i></div><div class="resource-bottom"><span id="mem-note">Memory utilization</span><strong id="mem-detail">Waiting</strong></div>
+        </article>
+        <article class="resource-card storage-card">
+          <div class="resource-card-top"><span class="resource-name"><span class="resource-icon">▣</span> STORAGE</span><span class="resource-tag">HOME FS</span></div>
+          <div class="resource-main"><div class="resource-reading" id="disk">—<small>%</small></div><div class="resource-orb storage-orb"><span>DISK</span><b>FS</b></div></div>
+          <div class="resource-track"><i id="disk-bar"></i></div><div class="resource-bottom"><span id="disk-note">Filesystem usage</span><strong id="disk-detail">Waiting</strong></div>
+        </article>
+        <article class="resource-card uptime-card">
+          <div class="resource-card-top"><span class="resource-name"><span class="resource-icon">◷</span> AVAILABILITY</span><span class="resource-tag">UPTIME</span></div>
+          <div class="uptime-reading" id="uptime">—</div><div class="uptime-subtitle">Host operating time</div>
+          <div class="uptime-rail"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          <div class="resource-bottom"><span>Since last boot</span><strong>HOST LEVEL</strong></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="monitor-grid">
+      <article class="monitor-panel network-panel" id="bandwidth">
+        <div class="panel-heading"><div><div class="panel-overline"><span class="panel-spark"></span> BANDWIDTH ANALYTICS</div><h3>Network throughput</h3><p>Incoming and outgoing traffic over time</p></div><span class="live-pill"><span class="online-dot"></span> LIVE <b>·</b> 5 SEC</span></div>
+        <div class="chart-labels"><span>TRANSFER RATE</span><span>RECENT ACTIVITY</span></div>
+        <div class="chart-wrap"><canvas id="network-chart" role="img" aria-label="Recent download and upload throughput chart"></canvas></div>
+        <div class="network-legend"><span><i class="legend-down"></i> DOWNLOAD</span><span><i class="legend-up"></i> UPLOAD</span></div>
+        <div class="traffic-readouts"><div class="traffic-box download-box"><span><i>↓</i> DOWNLOAD SPEED</span><strong id="rx">— <em>/s</em></strong><small>Inbound traffic</small></div><div class="traffic-box upload-box"><span><i>↑</i> UPLOAD SPEED</span><strong id="tx">— <em>/s</em></strong><small>Outbound traffic</small></div></div>
+      </article>
+
+      <article class="monitor-panel health-panel" id="system">
+        <div class="panel-heading"><div><div class="panel-overline"><span class="panel-spark health-spark"></span> SYSTEM DIAGNOSTICS</div><h3>Host health</h3><p>Load average and resource details</p></div><span class="health-emblem">⌘</span></div>
+        <div class="load-title">SYSTEM LOAD AVERAGE <span>· 1 / 5 / 15 MIN</span></div>
+        <div class="load-readings"><div class="load-reading load-one"><strong id="l1">—</strong><small>1 MIN</small></div><div class="load-reading load-five"><strong id="l5">—</strong><small>5 MIN</small></div><div class="load-reading load-fifteen"><strong id="l15">—</strong><small>15 MIN</small></div></div>
+        <div class="diagnostic-list"><div class="diagnostic-row"><span>CPU utilization</span><strong id="cpu-detail">Waiting</strong></div><div class="diagnostic-row"><span>Memory allocation</span><strong id="mem-detail">Waiting</strong></div><div class="diagnostic-row"><span>Filesystem capacity</span><strong id="disk-detail">Waiting</strong></div><div class="diagnostic-row"><span>Polling interval</span><strong>5 seconds</strong></div></div>
+      </article>
+    </section>
+
+    <section class="scope-banner"><span class="scope-symbol">i</span><div><strong>Shared-hosting visibility notice</strong><p id="scope">Some values may describe the shared host rather than only your account. Disk capacity is not a Feral quota measurement.</p></div><span class="scope-readonly">READ ONLY</span></section>
+    <footer class="workspace-footer"><span><b>FERAL QUICKBOX</b> <i>·</i> PRIVATE SERVER DASHBOARD</span><span>ROOTLESS DEPLOYMENT <i>·</i> NO SERVICE CHANGES</span></footer>
+  </main>
+</div>
 <script nonce="<?php echo htmlspecialchars($nonce, ENT_QUOTES, 'UTF-8'); ?>">
 (function(){'use strict';
 var base=<?php echo json_encode($base); ?>,last=null,history=[],maxPoints=30;
