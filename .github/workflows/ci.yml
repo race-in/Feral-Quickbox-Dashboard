@@ -24,6 +24,8 @@ jobs:
         run: shellcheck --severity=style install.sh uninstall.sh tests/smoke.sh scripts/feral-preflight.sh
       - name: Installer and uninstaller smoke tests
         run: bash tests/smoke.sh
+      - name: Run read-only preflight
+        run: bash scripts/feral-preflight.sh
       - name: Help output
         run: |
           bash install.sh --help
