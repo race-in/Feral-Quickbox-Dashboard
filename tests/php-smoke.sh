@@ -33,6 +33,11 @@ curl -fsS -b "$tmp/cookies" "$url" -o "$tmp/dashboard"
 grep -q 'Welcome to your slot' "$tmp/dashboard"
 grep -q 'network-chart' "$tmp/dashboard"
 grep -q 'Network activity' "$tmp/dashboard"
+grep -q 'resource-grid' "$tmp/dashboard"
+grep -q 'monitor-grid' "$tmp/dashboard"
+grep -q 'SYSTEM DIAGNOSTICS' "$tmp/dashboard"
+[[ "$(grep -o 'id=\"mem-detail\"' "$tmp/dashboard" | wc -l)" -eq 1 ]]
+[[ "$(grep -o 'id=\"disk-detail\"' "$tmp/dashboard" | wc -l)" -eq 1 ]]
 csrf="$(sed -n 's/.*name="csrf" value="\([a-f0-9]*\)".*/\1/p' "$tmp/dashboard" | head -1)"
 # shellcheck disable=SC2016
 curl -fsS -b "$tmp/cookies" "$url?action=metrics" | php -r '$d=json_decode(stream_get_contents(STDIN),true); if(empty($d["ok"])||!array_key_exists("cpu",$d["metrics"])||!array_key_exists("memory",$d["metrics"])) exit(1);'
