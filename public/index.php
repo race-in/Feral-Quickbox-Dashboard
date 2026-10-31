@@ -215,7 +215,7 @@ a{color:inherit;text-decoration:none}.shell{min-height:100vh}.sidebar{position:f
 
     <section class="monitor-grid">
       <article class="monitor-panel network-panel" id="bandwidth">
-        <div class="panel-heading"><div><div class="panel-overline"><span class="panel-spark"></span> BANDWIDTH ANALYTICS</div><h3>Network throughput</h3><p>Incoming and outgoing traffic over time</p></div><span class="live-pill"><span class="online-dot"></span> LIVE <b>·</b> 5 SEC</span></div>
+        <div class="panel-heading"><div><div class="panel-overline"><span class="panel-spark"></span> BANDWIDTH ANALYTICS</div><h3>Network activity</h3><p>Incoming and outgoing traffic over time</p></div><span class="live-pill"><span class="online-dot"></span> LIVE <b>·</b> 5 SEC</span></div>
         <div class="chart-labels"><span>TRANSFER RATE</span><span>RECENT ACTIVITY</span></div>
         <div class="chart-wrap"><canvas id="network-chart" role="img" aria-label="Recent download and upload throughput chart"></canvas></div>
         <div class="network-legend"><span><i class="legend-down"></i> DOWNLOAD</span><span><i class="legend-up"></i> UPLOAD</span></div>
