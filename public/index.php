@@ -50,7 +50,7 @@ function fqd_metrics($config) {
     if (is_array($stat) && isset($stat[0]) && strpos($stat[0], 'cpu ') === 0) {
         $v = preg_split('/\\s+/', trim($stat[0]));
         array_shift($v);
-        $v = array_map('intval', $v);
+        $v = array_map('intval', array_slice($v, 0, 8));
         $now = array('total' => array_sum($v), 'idle' => $v[3] + (isset($v[4]) ? $v[4] : 0));
         if (isset($_SESSION['cpu']) && $now['total'] > $_SESSION['cpu']['total']) {
             $dt = $now['total'] - $_SESSION['cpu']['total'];
