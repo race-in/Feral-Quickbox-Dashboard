@@ -6,9 +6,9 @@ set -Eeuo pipefail
 IFS=$'\n\t'
 
 readonly APP_NAME="feral-quickbox"
-readonly CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/$APP_NAME"
-readonly DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/$APP_NAME"
-readonly CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/$APP_NAME"
+CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/$APP_NAME"
+DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/$APP_NAME"
+CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/$APP_NAME"
 
 usage() {
   cat <<'EOF'
