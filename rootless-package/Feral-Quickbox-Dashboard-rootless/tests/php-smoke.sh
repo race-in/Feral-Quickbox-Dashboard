@@ -13,6 +13,12 @@ cleanup(){
     echo "--- parsed service argv ---" >&2
     # shellcheck disable=SC2016
     php -r 'define("FQD_BOOTSTRAPPED",true); require $argv[1]; $s=fqd_services_config($argv[2],$argv[3]); var_export($s["sleepy"]["start"] ?? array()); echo "\\n";' "$PWD/public/inc/lib.php" "$cfg" "$tmp" >&2
+    echo "--- spawn argv ---" >&2
+    [[ ! -f "$tmp/spawn.argv" ]] || cat "$tmp/spawn.argv" >&2
+    echo "--- child stderr ---" >&2
+    [[ ! -f "$tmp/spawn.child.log" ]] || cat "$tmp/spawn.child.log" >&2
+    echo "--- detached PID ---" >&2
+    if [[ -f "$tmp/spawn.pid" ]]; then p="$(cat "$tmp/spawn.pid")"; ps -p "$p" -o pid,ppid,stat,args >&2 || true; fi
     echo "--- matching process snapshot ---" >&2
     pgrep -afu "$(id -u)" 'fqd-sleepy|sleep 600|exec -a' >&2 || true
   fi
@@ -23,6 +29,7 @@ cleanup(){
 trap cleanup EXIT
 web="$tmp/www"; app="$web/Feral-Quickbox-Dashboard"; cfg="$tmp/private/config.env"
 bash_bin="$(command -v bash)"; sleep_bin="$(command -v sleep)"
+export FQD_SPAWN_DEBUG="$tmp/spawn"
 [[ -x "$bash_bin" && -x "$sleep_bin" ]] || { echo 'ERROR: bash and sleep are required for the service smoke test.' >&2; exit 1; }
 mkdir -p "$app" "$(dirname "$cfg")" "$tmp/cache" "$tmp/data"
 cp -r public/. "$app/"
