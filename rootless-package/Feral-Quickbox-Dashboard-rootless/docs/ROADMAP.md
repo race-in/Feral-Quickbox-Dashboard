@@ -34,3 +34,12 @@
 ## Phase 5 — release readiness
 - [ ] Live Feral install/upgrade/uninstall testing.
 - [ ] Security review, compatibility matrix and tagged release.
+
+
+## Classic UI branch follow-up
+
+- [ ] Add optional read-only qBittorrent and Deluge API health panels using credentials stored outside the webroot.
+- [ ] Add user-space application detection and shortcuts for configured clients without assuming QuickBox package lock files.
+- [ ] Consider a safe user-owned service autostart mechanism only when the host explicitly supports it; never simulate systemd enablement.
+- [ ] Add screenshot/browser visual regression coverage for desktop sidebar and mobile navigation.
+- [ ] Keep the Package Management Center informational unless a per-application rootless installer has been reviewed, tested and documented individually.
