@@ -423,11 +423,14 @@ function fqd_spawn(array $argv, string $cwd): bool
     // a long-lived daemon can keep the HTTP connection open even after PHP responds.
     // /proc/self/fd is available on the supported Linux shared-hosting target.
     $spawnDebug = getenv('FQD_SPAWN_DEBUG');
-    if (is_string($spawnDebug) && $spawnDebug !== '') {
+    $spawnDebug = is_string($spawnDebug) ? $spawnDebug : '';
+    if ($spawnDebug !== '') {
         @file_put_contents($spawnDebug . '.php', 'php_pid=' . fqd_pid() . "\\n");
     }
-    $script = 'for fd in /proc/self/fd/[0-9]*; do n=${fd##*/}; case "$n" in 0|1|2) continue ;; esac; eval "exec ${n}>&-" 2>/dev/null || :; done; if [ -n "${FQD_SPAWN_DEBUG:-}" ]; then printf "wrapper=%s\\n" "$" > "${FQD_SPAWN_DEBUG}.launch"; printf "argv:" >> "${FQD_SPAWN_DEBUG}.launch"; printf " <%s>" "$@" >> "${FQD_SPAWN_DEBUG}.launch"; printf "\\n" >> "${FQD_SPAWN_DEBUG}.launch"; command -v setsid >> "${FQD_SPAWN_DEBUG}.launch" 2>&1 || :; command -v nohup >> "${FQD_SPAWN_DEBUG}.launch" 2>&1 || :; if command -v setsid >/dev/null 2>&1; then setsid nohup "$@" >/dev/null 2>"${FQD_SPAWN_DEBUG}.stderr" </dev/null & else nohup "$@" >/dev/null 2>"${FQD_SPAWN_DEBUG}.stderr" </dev/null & fi; child=$!; echo "$child" > "${FQD_SPAWN_DEBUG}.pid"; sleep 1; kill -0 "$child" 2>>"${FQD_SPAWN_DEBUG}.launch" && echo "child_alive=yes" >> "${FQD_SPAWN_DEBUG}.launch" || echo "child_alive=no" >> "${FQD_SPAWN_DEBUG}.launch"; else if command -v setsid >/dev/null 2>&1; then setsid nohup "$@" >/dev/null 2>&1 </dev/null & else nohup "$@" >/dev/null 2>&1 </dev/null & fi; fi';
-    $cmd = array_merge(array('/bin/sh', '-c', $script, 'fqd-start'), $argv);
+    // Pass the optional diagnostic path as a positional shell argument, not
+    // through the process environment. The command argv remains separate.
+    $script = 'debug=$1; shift; if [ -n "$debug" ]; then printf "entered wrapper=%s\\n" "$$" > "$debug.entry"; fi; for fd in /proc/self/fd/[0-9]*; do n=${fd##*/}; case "$n" in 0|1|2) continue ;; esac; eval "exec ${n}>&-" 2>/dev/null || :; done; if [ -n "$debug" ]; then printf "argv:" > "$debug.launch"; printf " <%s>" "$@" >> "$debug.launch"; printf "\\n" >> "$debug.launch"; command -v setsid >> "$debug.launch" 2>&1 || :; command -v nohup >> "$debug.launch" 2>&1 || :; if command -v setsid >/dev/null 2>&1; then setsid nohup "$@" >/dev/null 2>"$debug.stderr" </dev/null & else nohup "$@" >/dev/null 2>"$debug.stderr" </dev/null & fi; child=$!; echo "$child" > "$debug.pid"; sleep 1; kill -0 "$child" 2>>"$debug.launch" && echo "child_alive=yes" >> "$debug.launch" || echo "child_alive=no" >> "$debug.launch"; else if command -v setsid >/dev/null 2>&1; then setsid nohup "$@" >/dev/null 2>&1 </dev/null & else nohup "$@" >/dev/null 2>&1 </dev/null & fi; fi';
+    $cmd = array_merge(array('/bin/sh', '-c', $script, 'fqd-start', $spawnDebug), $argv);
     $p = fqd_proc_open_argv($cmd, array(array('file', '/dev/null', 'r'), array('file', '/dev/null', 'w'), array('file', '/dev/null', 'w')), $pipes, $cwd);
     if (!is_resource($p)) return false;
     // The shell wrapper can report a non-zero status after handing off a detached
@@ -435,7 +438,10 @@ function fqd_spawn(array $argv, string $cwd): bool
     // differently). Do not treat that status as proof of service failure:
     // fqd_service_action() independently verifies the target process by UID,
     // executable identity and start time before reporting success.
-    @proc_close($p);
+    $spawnStatus = @proc_close($p);
+    if ($spawnDebug !== '') {
+        @file_put_contents($spawnDebug . '.php', 'php_pid=' . fqd_pid() . "\\nproc_close=' . (string) $spawnStatus . "\\n", FILE_APPEND);
+    }
     return true;
 }
 
