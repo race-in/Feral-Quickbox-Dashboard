@@ -134,7 +134,7 @@ function fqd_throttle_check(string $cacheDir, string $ip): int
     return ((int) $e['n'] >= 5) ? max(1, 900 - $elapsed) : 0;
 }
 
-function fqd_throttle_record(string $cacheDir, string $ip, bool $ok): void
+function fqd_throttle_record(string $cacheDir, string $ip, bool $ok)
 {
     $f = fqd_throttle_file($cacheDir);
     $fh = @fopen($f, 'c+');
@@ -485,7 +485,7 @@ function fqd_quota_scan_step(string $home, string $cacheDir, float $budget): boo
  * whose result is cached; the web request itself never blocks on it.
  * @return array{total:int,used:int,percent:float,stale:bool}|null
  */
-function fqd_quota(array $config, string $home, string $cacheDir): ?array
+function fqd_quota(array $config, string $home, string $cacheDir)
 {
     $gb = isset($config['QUOTA_GB']) ? (float) $config['QUOTA_GB'] : 0.0;
     if ($gb <= 0 || $cacheDir === '') return null;
