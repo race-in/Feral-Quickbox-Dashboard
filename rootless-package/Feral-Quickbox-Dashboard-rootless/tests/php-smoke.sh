@@ -83,7 +83,7 @@ curl -fsS "${url}assets/quickbox-smoked.css?v=6cc7d23" -o "$tmp/smoked.css"
 curl -fsS "${url}assets/feral-overrides.css?v=6cc7d23" -o "$tmp/overrides.css"
 grep -q '.headerpanel' "$tmp/defaulted.css"
 grep -q '.leftpanel' "$tmp/defaulted.css"
-grep -q '.panel-main' "$tmp/smoked.css"
+grep -q '.panel-heading' "$tmp/smoked.css"
 grep -q '.fqd-rootless' "$tmp/overrides.css"
 [[ "$(curl -sS -o /dev/null -w '%{http_code}' "${url}fonts/glyphicons-halflings-regular.woff2")" == 200 ]]
 [[ "$(curl -sS -o /dev/null -w '%{http_code}' "${url}img/logo-light.png")" == 200 ]]
