@@ -13,6 +13,8 @@ cleanup(){
     echo "--- parsed service argv ---" >&2
     # shellcheck disable=SC2016
     php -r 'define("FQD_BOOTSTRAPPED",true); require $argv[1]; $s=fqd_services_config($argv[2],$argv[3]); var_export($s["sleepy"]["start"] ?? array()); echo "\\n";' "$PWD/public/inc/lib.php" "$cfg" "$tmp" >&2
+    echo "--- PHP spawn environment marker ---" >&2
+    [[ ! -f "$tmp/spawn.php" ]] || cat "$tmp/spawn.php" >&2
     echo "--- spawn launch log ---" >&2
     [[ ! -f "$tmp/spawn.launch" ]] || cat "$tmp/spawn.launch" >&2
     echo "--- spawn stderr ---" >&2
