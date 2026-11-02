@@ -113,7 +113,7 @@ $apps = $auth ? fqd_apps($config) : array();
 $e = static function ($s) { return htmlspecialchars((string) $s, ENT_QUOTES, 'UTF-8'); };
 ?>
 <!doctype html>
-<html lang="en" data-theme="dark"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0b1020"><title>Feral Quickbox Dashboard</title>
+<html lang="en" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0b1020"><title>Feral Quickbox Dashboard</title>
 <style nonce="<?php echo $e($nonce); ?>">
 :root{color-scheme:dark;--bg:#080d19;--bg1:#332b63;--bg2:#102b43;--surface:#101a2b;--panel:#121e33;--panel2:#172640;--side:rgba(8,14,27,.94);--line:#253650;--line2:#2c405d;--text:#eef4ff;--text2:#bdcbe1;--muted:#899bb8;--faint:#667b9b;--purple:#a895ff;--blue:#69b9ff;--green:#55d6a2;--amber:#f2bd6b;--red:#ff8294;--track:#293a55;--shadow:#0003;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
 :root[data-theme=light]{color-scheme:light;--bg:#eef2f9;--bg1:#e1dcff;--bg2:#d6ecff;--surface:#fff;--panel:#fff;--panel2:#f3f6fc;--side:rgba(255,255,255,.95);--line:#d6dfed;--line2:#c8d4e6;--text:#16213a;--text2:#34456a;--muted:#5d6f90;--faint:#7d8cab;--purple:#6c57e0;--blue:#1f7fd6;--green:#10976a;--amber:#b57812;--red:#d03c52;--track:#dfe6f2;--shadow:#1b2a4a14}
@@ -134,6 +134,46 @@ $e = static function ($s) { return htmlspecialchars((string) $s, ENT_QUOTES, 'UT
 .qb-panel table th{padding-top:2px}.qb-panel table td{padding-top:9px;padding-bottom:9px}.qb-panel .tag{font-size:8px}
 @media(max-width:1050px){.qb-columns{grid-template-columns:1fr}.qb-side{grid-template-columns:repeat(2,minmax(0,1fr))}.qb-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:680px){.qb-shell{padding:0 10px 20px}.qb-header{height:auto;min-height:65px;flex-wrap:wrap;padding:10px 0}.qb-host{display:none}.qb-nav a{padding:12px 10px;font-size:10px}.qb-page-title{display:block}.qb-page-title .updated{margin-top:9px}.qb-stats{gap:8px}.qb-stat{padding:11px}.qb-stat-value{font-size:22px}.qb-side{grid-template-columns:1fr}.qb-panel{padding:12px}.qb-panel table{min-width:560px}.qb-bandwidth strong{font-size:15px}}
+
+
+/* Layout proportions and palette follow the Classic QuickBox / Lite panel shell. */
+:root{color-scheme:light;--bg:#f2f3f5;--bg1:#e8edf2;--bg2:#edf1f4;--surface:#fff;--panel:#fff;--panel2:#f7f8fa;--side:#2a2a2a;--line:#e4e7eb;--line2:#d7dce2;--text:#3b4149;--text2:#505b68;--muted:#7e8998;--faint:#9aa4b1;--purple:#6d7b91;--blue:#31a3d2;--green:#66b88b;--amber:#c99133;--red:#cf625e;--track:#e4e8ed;--shadow:#1b2a3a12}
+:root[data-theme=dark]{color-scheme:dark;--bg:#15191f;--bg1:#202a36;--bg2:#182735;--surface:#20262f;--panel:#222a34;--panel2:#293340;--side:#202020;--line:#35404c;--line2:#44515f;--text:#eef2f6;--text2:#cbd4de;--muted:#a0adbb;--faint:#8391a0;--purple:#b3a0ff;--blue:#69b9ff;--green:#66d5a4;--amber:#f2bd6b;--red:#ff8294;--track:#3a4653;--shadow:#0003}
+.qb-shell{max-width:none;margin:0;padding:0 0 30px}
+.qb-header{position:fixed;top:0;left:0;right:0;height:64px;padding:0 20px;background:#292929;border:0;border-radius:0;z-index:2000;box-shadow:0 2px 7px #0002}
+.qb-brand{height:64px;width:280px;flex:0 0 280px;margin-left:-20px;padding:6px 18px;background:#222;gap:12px}
+.qb-logo{height:43px;width:43px;border-radius:4px;background:linear-gradient(135deg,#48a8d1,#24658e);box-shadow:none}
+.qb-brand strong{color:#fff;font-size:17px}.qb-brand strong span{color:#5fc0de}.qb-brand small{color:#aab0b9}
+.qb-top-actions{margin-left:auto}.qb-host{background:#202020;border-color:#42464d;color:#c6ccd3}
+.qb-nav{position:fixed;display:block;top:64px;bottom:0;left:0;width:280px;min-height:0;margin:0;padding:13px 0 25px;overflow-y:auto;overflow-x:hidden;background:#2a2a2a;border:0;border-right:1px solid #1c1c1c;border-radius:0;z-index:100}
+.qb-nav a{display:block;width:100%;padding:13px 20px;margin:0;border:0;border-left:3px solid transparent;border-radius:0;color:#b7bdc5;font-size:12px}
+.qb-nav a:hover,.qb-nav a.active{color:#fff;background:#222;border:0;border-left:3px solid #31c1d2}
+.qb-nav i{display:inline-block;width:20px;color:#8da0b1}
+.qb-main{max-width:1680px;margin-left:280px;padding:84px 22px 28px}
+.qb-page-title{padding-bottom:3px}.qb-page-title h1{font-weight:600}
+.qb-stat,.qb-panel{border-radius:3px;box-shadow:0 2px 7px var(--shadow);border-color:var(--line)}
+.qb-panel{padding:15px}
+.qb-panel-head{margin:-15px -15px 14px;padding:13px 15px;background:#2a2a2a;color:#fff;border:0;border-radius:3px 3px 0 0}
+.qb-panel-head h2{color:#fff;font-size:11px;letter-spacing:.45px}
+.qb-panel-head .tag{border-color:#48545d;background:#242b31;color:#a9d7c0}
+.qb-stat-title{color:var(--muted)}
+.qb-bandwidth>div,.qb-three>div,.qb-load>div{border-radius:3px}
+.qb-notice{border-radius:3px}
+.qb-state{border-radius:2px}
+.qb-state.blocked{border-radius:2px}
+.qb-nav::-webkit-scrollbar{width:6px}.qb-nav::-webkit-scrollbar-thumb{background:#555;border-radius:5px}
+@media(max-width:991px){
+ .qb-header{padding:0 12px}.qb-brand{width:auto;flex:1 1 auto;margin-left:-12px;padding-left:12px}
+ .qb-nav{position:static;display:flex;align-items:stretch;width:auto;height:48px;min-height:48px;margin-top:64px;padding:0;overflow-x:auto;overflow-y:hidden;border:0;border-bottom:1px solid var(--line);background:var(--panel)}
+ .qb-nav a{display:block;width:auto;flex:0 0 auto;padding:15px 12px 12px;border-left:0;border-bottom:2px solid transparent;color:var(--muted);font-size:10px}
+ .qb-nav a:hover,.qb-nav a.active{background:transparent;border-left:0;border-bottom:2px solid #31c1d2;color:var(--text)}
+ .qb-main{margin-left:0;padding:20px 18px 25px}
+}
+@media(max-width:680px){
+ .qb-header{height:60px}.qb-brand{height:60px}.qb-brand small{font-size:8px}.qb-logo{height:37px;width:37px}
+ .qb-nav{margin-top:60px;height:44px;min-height:44px}.qb-nav a{padding:13px 9px 10px}
+ .qb-main{padding:17px 10px 22px}
+}
 
 *{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 78% -18%,var(--bg1) 0,transparent 38%),radial-gradient(ellipse at 0 60%,var(--bg2) 0,transparent 30%),var(--bg);color:var(--text)}
 a{color:inherit;text-decoration:none}button{font:inherit}
