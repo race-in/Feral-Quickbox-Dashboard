@@ -1,6 +1,6 @@
 # QuickBox Lite upstream compatibility review
 
-Review date: 2026-11-01
+Review date: 2026-11-03
 
 Reviewed upstream: [amefs/quickbox-lite](https://github.com/amefs/quickbox-lite)  
 Reviewed branch: `master`  
@@ -48,3 +48,10 @@ The backend must also be bound to `127.0.0.1` by default, use a user-owned port,
 ## Conclusion
 
 The correct path is a controlled rootless adaptation, not a one-line upstream installer. This review is based on source inspection; it is not a live-host compatibility test.
+
+
+## Feral Classic UI branch status
+
+The `feral-classic-quickbox-rootless` branch uses a purpose-built PHP page with a Classic QuickBox-style top bar, desktop sidebar, responsive navigation, bandwidth panel, Service Control Center and informational Package Management Center. It does not bundle the upstream Node/WebSocket daemon or execute the upstream `systemctl`, package-install, package-remove or host-maintenance command templates. User-process actions remain subject to the Feral branch's private services allow-list and per-user process checks.
+
+The visual port is not a claim of full operational parity: root-level package installation/removal, systemd enablement, firewall and host maintenance are intentionally unavailable. The remaining feature gaps are tracked in `ROADMAP.md`.
