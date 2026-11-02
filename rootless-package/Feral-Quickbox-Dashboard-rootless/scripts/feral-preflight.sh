@@ -13,7 +13,9 @@ printf 'Bash: %s\n' "$BASH_VERSION"
 printf 'Open-file limit: %s\nProcess limit: %s\n' "$(ulimit -n)" "$(ulimit -u)"
 for c in git curl php python3 pgrep; do command -v "$c" >/dev/null 2>&1 && printf '%-8s available\n' "$c" || printf '%-8s missing\n' "$c"; done
 if command -v php >/dev/null 2>&1; then php -r 'echo "PHP CLI: ".PHP_VERSION."\npassword_hash(): ".(function_exists("password_hash")?"yes":"no")."\n";'; fi
-if command -v php >/dev/null 2>&1; then php -r 'foreach (["mbstring","posix","session","json"] as $e) echo "PHP ext $e: ".(extension_loaded($e)?"yes":"no (optional fallback)")."\n"; echo "proc_open(): ".(function_exists("proc_open")&&!in_array("proc_open",array_map("trim",explode(",",(string)ini_get("disable_functions"))),true)?"yes":"NO - service Start/Stop and quota will not work")."\n";'; fi
+if command -v php >/dev/null 2>&1; then # shellcheck disable=SC2016
+  php -r 'foreach (["mbstring","posix","session","json"] as $e) echo "PHP ext $e: ".(extension_loaded($e)?"yes":"no (optional fallback)")."\n"; echo "proc_open(): ".(function_exists("proc_open")&&!in_array("proc_open",array_map("trim",explode(",",(string)ini_get("disable_functions"))),true)?"yes":"NO - service Start/Stop and quota will not work")."\n";'
+fi
 printf 'getconf CLK_TCK: %s\n' "$(getconf CLK_TCK 2>/dev/null || echo 'unavailable (fallback 100)')"
 [[ -r /proc/self/smaps_rollup ]] && echo 'Readable: /proc/self/smaps_rollup (PSS memory)' || echo 'Unavailable: smaps_rollup (memory falls back to RSS)'
 for p in /proc/self/status /proc/meminfo /proc/net/dev /proc/uptime; do [[ -r "$p" ]] && echo "Readable: $p" || echo "Unavailable: $p"; done
