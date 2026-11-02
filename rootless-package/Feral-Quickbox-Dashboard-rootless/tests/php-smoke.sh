@@ -84,6 +84,7 @@ if [[ "$start_code" != 200 ]]; then
   echo "ERROR: sleepy service start returned HTTP $start_code (expected 200)." >&2
   exit 1
 fi
+# shellcheck disable=SC2016
 php -r '$d=json_decode(file_get_contents($argv[1]),true); if(!is_array($d)||empty($d["ok"])) { fwrite(STDERR,"ERROR: sleepy service start returned an empty/invalid success body.\\n"); exit(1); }' "$tmp/svc.out"
 # shellcheck disable=SC2016
 metrics | php -r '$d=json_decode(stream_get_contents(STDIN),true); foreach($d["metrics"]["services"] as $s) if($s["id"]==="sleepy"&&$s["running"]) exit(0); exit(1);'
