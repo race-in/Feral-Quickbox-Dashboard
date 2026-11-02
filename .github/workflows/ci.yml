@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, rootless-package-test]
+    branches: [main, rootless-package-test, feral-classic-quickbox-rootless]
   pull_request:
   workflow_dispatch:
 
