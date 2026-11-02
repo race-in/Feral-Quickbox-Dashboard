@@ -171,7 +171,7 @@ table{width:100%;border-collapse:collapse;font-size:11px}th{text-align:left;font
   <header class="qb-header">
     <div class="qb-brand"><div class="qb-logo">QB</div><div><strong>QuickBox <span>Feral</span></strong><small>SHARED SLOT DASHBOARD</small></div></div>
     <div class="qb-top-actions">
-      <span class="qb-host"><i class="dot"></i><?php echo $e($host); ?></span>
+      <span class="qb-host"><i class="dot"></i><span id="whoami"><?php echo $e($host); ?></span></span>
       <button class="btn" id="theme" type="button" aria-label="Toggle light / dark theme">◐ Theme</button>
       <form class="inl" method="post" action="<?php echo $e($base . '/'); ?>"><input type="hidden" name="csrf" value="<?php echo $e($csrf); ?>"><button class="btn" name="logout" value="1">Sign out</button></form>
     </div>
@@ -225,51 +225,9 @@ table{width:100%;border-collapse:collapse;font-size:11px}th{text-align:left;font
         <article class="qb-panel"><div class="qb-panel-head"><h2>SERVER MODE</h2></div><div class="qb-mode"><i class="dot"></i><strong>ROOTLESS / FERAL</strong><p>No sudo, no systemctl, no system package manager. This dashboard does not modify other accounts or system services.</p></div></article>
       </aside>
     </section>
-    <div class="notice"><span class="notice-icon">i</span><div><strong>Shared-hosting metric scope</strong>CPU, RAM, network, load and uptime may describe the whole host. “Your slot” counts only processes owned by your user. Disk capacity is filesystem capacity unless an actual quota is configured.</div></div>
+    <div class="notice"><span class="notice-icon">i</span><div><strong>Shared-hosting metric scope</strong><span id="scope">CPU, RAM, network, load and uptime may describe the whole host. “Your slot” counts only processes owned by your user. Disk capacity is filesystem capacity unless an actual quota is configured.</span></div></div>
     <footer class="footer"><span>Feral QuickBox Dashboard · Classic UI edition</span><span>Independent rootless community project</span></footer>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
   </main>
 </div>
-<?php endif; ?></article>
-</div>
-</section>
-<div class="notice"><span class="notice-icon">i</span><div><strong>Shared-hosting metric scope</strong><span id="scope">Host figures describe the whole shared server. "My slot" counts only your own processes.</span></div></div>
-<footer class="footer"><span>Feral Quickbox Dashboard <span aria-hidden="true">·</span> QuickBox Lite style</span><span>Rootless <span aria-hidden="true">·</span> Own-user only <span aria-hidden="true">·</span> Auto refresh</span></footer>
-</main>
-<div class="toast" id="toast" role="status" aria-live="polite"></div>
-<script nonce="<?php echo $e($nonce); ?>">
-(function(){'use strict';
-var base=<?php echo json_encode($base); ?>,csrf=<?php echo json_encode($csrf); ?>,last=null,history=[],lastIf={},maxPoints=30,busy=false;
-function el(id){return document.getElementById(id)}
-function mk(tag,cls,txt){var n=document.createElement(tag);if(cls)n.className=cls;if(txt!==undefined)n.textContent=txt;return n}
-function bytes(n){if(typeof n!=='number'||!isFinite(n)||n<0)return '—';var u=['B','KB','MB','GB','TB','PB'],i=0;while(n>=1024&&i<5){n/=1024;i++}return n.toFixed(i?(n<10?2:1):0)+' '+u[i]}
-function dur(s){if(typeof s!=='number')return '—';var d=Math.floor(s/86400),h=Math.floor(s%86400/3600),m=Math.floor(s%3600/60);return d?d+'d '+h+'h':h?h+'h '+m+'m':m+'m'}
-function bar(id,v){var b=el(id);b.style.width=(v===null?0:Math.max(0,Math.min(100,v)))+'%';b.className=v>=90?'hot':v>=75?'warm':''}
-function pct(id,v){el(id).innerHTML='';el(id).appendChild(document.createTextNode(v===null?'—':v.toFixed(1)));el(id).appendChild(mk('small',null,'%'))}
-function toast(msg,err){var t=el('toast');t.textContent=msg;t.className='toast show'+(err?' err':'');clearTimeout(t._t);t._t=setTimeout(function(){t.className='toast'},4500)}
-function chart(){var c=el('network-chart');if(!c)return;var cs=getComputedStyle(document.documentElement),w=c.clientWidth,h=c.clientHeight,dpr=Math.max(1,window.devicePixelRatio||1);c.width=Math.round(w*dpr);c.height=Math.round(h*dpr);var x=c.getContext('2d');x.scale(dpr,dpr);x.clearRect(0,0,w,h);var pad=8,plotH=h-18,plotW=w-pad*2,max=1;history.forEach(function(p){max=Math.max(max,p.rx,p.tx)});max*=1.2;for(var g=0;g<4;g++){var y=pad+(plotH/3)*g;x.beginPath();x.strokeStyle='rgba(137,155,184,.18)';x.lineWidth=1;x.moveTo(pad,y);x.lineTo(w-pad,y);x.stroke()}x.fillStyle='rgba(137,155,184,.8)';x.font='9px sans-serif';x.fillText(bytes(max)+'/s',pad+2,pad+9);
-function line(key,color){if(history.length<2)return;x.beginPath();history.forEach(function(p,i){var px=pad+(plotW*i/(maxPoints-1)),py=pad+plotH-(p[key]/max)*plotH;if(i===0)x.moveTo(px,py);else x.lineTo(px,py)});x.strokeStyle=color;x.lineWidth=2;x.lineJoin='round';x.lineCap='round';x.stroke();var p=history[history.length-1],px=pad+(plotW*(history.length-1)/(maxPoints-1)),py=pad+plotH-(p[key]/max)*plotH;x.beginPath();x.arc(px,py,3,0,Math.PI*2);x.fillStyle=color;x.fill()}
-line('rx',cs.getPropertyValue('--purple').trim()||'#a895ff');line('tx',cs.getPropertyValue('--blue').trim()||'#69b9ff')}
-function ifaces(m,now){var tb=el('ifaces');tb.innerHTML='';if(!m.network||!m.network.interfaces.length){var r=mk('tr'),c=mk('td','empty','Network counters are not readable on this host.');c.colSpan=5;r.appendChild(c);tb.appendChild(r);return}
-m.network.interfaces.forEach(function(i){var p=lastIf[i.name],rs=0,ts=0;if(p){var dt=(now-p.t)/1000;if(dt>0&&dt<60){rs=Math.max(0,i.rx-p.rx)/dt;ts=Math.max(0,i.tx-p.tx)/dt}}lastIf[i.name]={rx:i.rx,tx:i.tx,t:now};var r=mk('tr');r.appendChild(mk('td','nm',i.name));[bytes(rs)+'/s',bytes(ts)+'/s',bytes(i.rx),bytes(i.tx)].forEach(function(v){r.appendChild(mk('td','num',v))});tb.appendChild(r)})}
-function act(id,op,label){if((op==='stop'||op==='restart')&&!window.confirm(op.charAt(0).toUpperCase()+op.slice(1)+' '+label+'?'))return;if(busy)return;busy=true;toast(op+'… '+label);
-fetch(base+'/?action=service',{method:'POST',credentials:'same-origin',cache:'no-store',headers:{'Content-Type':'application/json','X-CSRF-Token':csrf},body:JSON.stringify({id:id,op:op})}).then(function(r){return r.json().catch(function(){return{ok:false,message:'Unexpected response'}})}).then(function(d){toast(d.message||(d.ok?'Done':'Failed'),!d.ok);busy=false;poll()}).catch(function(){busy=false;toast('Request failed',true)})}
-function services(list,caps){var nt=el('svc-notice');if(caps&&caps.exec===false){nt.textContent='Start/Stop unavailable: this host disables proc_open, so processes cannot be launched from PHP. Status monitoring still works.';nt.hidden=false}else if(caps&&caps.procfs===false){nt.textContent='/proc is not readable here, so process status cannot be shown.';nt.hidden=false}else nt.hidden=true;var tb=el('svc');tb.innerHTML='';var run=0;list.forEach(function(s){if(s.running)run++});el('svc-count').textContent=run+' RUNNING';
-if(!list.length){var r0=mk('tr'),c0=mk('td','empty');c0.colSpan=5;c0.appendChild(document.createTextNode('No services configured or detected. Copy '));c0.appendChild(mk('code',null,'services.example.ini'));c0.appendChild(document.createTextNode(' to '));c0.appendChild(mk('code',null,'~/.config/feral-quickbox/services.ini'));c0.appendChild(document.createTextNode(' and edit it.'));r0.appendChild(c0);tb.appendChild(r0);return}
-list.forEach(function(s){var r=mk('tr'),n=mk('td'),d=mk('span','dot'+(s.running?'':' off'));n.appendChild(d);var nm=mk('span','nm',s.label);if(s.url){var a=mk('a','nm',s.label);a.href=s.url;a.target='_blank';a.rel='noopener noreferrer';nm=a}n.appendChild(nm);n.appendChild(mk('span','sub',s.configured?(s.running?'running':'stopped'):'detected · read-only'));r.appendChild(n);
-r.appendChild(mk('td','num',s.running?String(s.count):'—'));r.appendChild(mk('td','num',s.running?bytes(s.rss):'—'));r.appendChild(mk('td','num',s.running?dur(s.age):'—'));
-var t=mk('td'),a=mk('div','acts');[['start','Start',!s.can_start||s.running],['restart','Restart',!s.can_start||!s.running],['stop','Stop',!s.can_stop||!s.running]].forEach(function(b){var btn=mk('button','btn'+(b[0]==='stop'?' danger':''),b[1]);btn.type='button';btn.disabled=!!b[2]||!s.configured;if(caps&&caps.exec===false&&s.configured)btn.title='Unavailable: proc_open is disabled on this host';btn.addEventListener('click',function(){act(s.id,b[0],s.label)});a.appendChild(btn)});t.appendChild(a);r.appendChild(t);tb.appendChild(r)})}
-function poll(){fetch(base+'/?action=metrics',{credentials:'same-origin',cache:'no-store'}).then(function(r){if(r.status===401){location.reload();throw Error('session')}if(!r.ok)throw Error('http');return r.json()}).then(function(d){var m=d.metrics,now=Date.now();
-pct('cpu',m.cpu);bar('cpu-bar',m.cpu);el('cpu-state').textContent=m.cpu===null?'Sampling…':'Live sample';el('cores').textContent=m.cores+' cores · shared';el('cpu-detail').textContent=m.cpu===null?'First sample pending':m.cpu.toFixed(1)+'%';
-var mem=m.memory;pct('mem',mem?mem.percent:null);bar('mem-bar',mem?mem.percent:null);el('mem-note').textContent=mem?bytes(mem.used)+' / '+bytes(mem.total):'—';el('mem-detail').textContent=mem?bytes(mem.used)+' of '+bytes(mem.total):'—';
-var q=m.quota,dk=m.disk;if(q){el('disk-label').textContent='Account quota';el('disk-sub').textContent=q.stale?'Refreshing…':'Measured with du';pct('disk',q.percent);bar('disk-bar',q.percent);el('disk-note').textContent=bytes(q.used)+' / '+bytes(q.total);el('disk-detail').textContent='Quota '+bytes(q.used)+' of '+bytes(q.total)}else{el('disk-label').textContent='Home filesystem';el('disk-sub').textContent='Filesystem usage';pct('disk',dk?dk.percent:null);bar('disk-bar',dk?dk.percent:null);el('disk-note').textContent=dk?bytes(dk.used)+' / '+bytes(dk.total):'Not quota';el('disk-detail').textContent=dk?bytes(dk.used)+' of '+bytes(dk.total)+' (fs)':'—'}
-el('uptime').textContent=dur(m.uptime);var l=m.load||[];['l1','l5','l15'].forEach(function(k,i){el(k).textContent=l.length?Number(l[i]).toFixed(2):'—'});
-el('scope').textContent=m.scope;if(m.user)el('whoami').textContent=m.user+'@'+location.hostname;
-var s=m.slot;el('s-proc').textContent=String(s.processes);el('s-mem').textContent=bytes(s.rss);el('s-cpu').textContent=s.cpu===null?'—':s.cpu.toFixed(1)+'%';
-var rx=0,tx=0;if(m.network&&last){var dt=(now-last.t)/1000;if(dt>0&&dt<60){rx=Math.max(0,m.network.rx-last.rx)/dt;tx=Math.max(0,m.network.tx-last.tx)/dt}}
-if(m.network){last={rx:m.network.rx,tx:m.network.tx,t:now};el('rx').innerHTML='';el('rx').appendChild(document.createTextNode(bytes(rx)+' '));el('rx').appendChild(mk('em',null,'/s'));el('tx').innerHTML='';el('tx').appendChild(document.createTextNode(bytes(tx)+' '));el('tx').appendChild(mk('em',null,'/s'));history.push({rx:rx,tx:tx});if(history.length>maxPoints)history.shift();chart()}else{el('rx').textContent='Unavailable';el('tx').textContent='Unavailable'}
-ifaces(m,now);services(m.services||[],m.capabilities);var u=el('updated');u.innerHTML='';u.appendChild(mk('span','dot'));u.appendChild(document.createTextNode('Updated '+new Date(m.time*1000).toLocaleTimeString()))}).catch(function(e){if(e.message!=='session')el('updated').textContent='Connection issue · retrying'})}
-el('theme').addEventListener('click',function(){var r=document.documentElement,n=r.getAttribute('data-theme')==='light'?'dark':'light';r.setAttribute('data-theme',n);try{localStorage.setItem('fqd-theme',n)}catch(x){}chart()});
-poll();var timer=setInterval(poll,5000);window.addEventListener('resize',chart);window.addEventListener('beforeunload',function(){clearInterval(timer)})
-}());
-</script>
 <?php endif; ?></body></html>
