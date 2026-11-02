@@ -11,14 +11,15 @@ cleanup(){
     if [[ -f "$tmp/server.log" ]]; then echo "--- PHP server log ---" >&2; tail -n 80 "$tmp/server.log" >&2; fi
   fi
   [[ -z "$pid" ]] || kill "$pid" 2>/dev/null || true
-  pkill -u "$(id -u)" -f "$tmp/fqd-sleepy" 2>/dev/null || true
+  pkill -u "$(id -u)" -f '^fqd-sleepy([[:space:]]|$)' 2>/dev/null || true
   if (( status == 0 )); then rm -rf "$tmp"; else echo "DEBUG files retained at: $tmp" >&2; fi
 }
 trap cleanup EXIT
 web="$tmp/www"; app="$web/Feral-Quickbox-Dashboard"; cfg="$tmp/private/config.env"
+bash_bin="$(command -v bash)"; sleep_bin="$(command -v sleep)"
+[[ -x "$bash_bin" && -x "$sleep_bin" ]] || { echo 'ERROR: bash and sleep are required for the service smoke test.' >&2; exit 1; }
 mkdir -p "$app" "$(dirname "$cfg")" "$tmp/cache" "$tmp/data"
 cp -r public/. "$app/"
-cp "$(command -v sleep)" "$tmp/fqd-sleepy"
 # shellcheck disable=SC2016
 hash="$(printf '%s' 'SmokeTestPassword123!' | php -r '$p=stream_get_contents(STDIN); echo password_hash($p,PASSWORD_DEFAULT);')"
 printf 'PASSWORD_HASH="%s"\nHOME_PATH=%s\nDATA_PATH=%s\nCACHE_PATH=%s\nAPPS="ruTorrent|/rutorrent/;Bad|javascript:alert(1)"\n' "$hash" "$tmp" "$tmp/data" "$tmp/cache" >"$cfg"
@@ -26,7 +27,7 @@ cat >"$(dirname "$cfg")/services.ini" <<INI
 [sleepy]
 label = Sleepy test
 match = fqd-sleepy
-start = $tmp/fqd-sleepy 600
+start = $bash_bin -c 'exec -a fqd-sleepy $sleep_bin 600'
 [nostart]
 label = No start
 match = fqd-nothing-here
