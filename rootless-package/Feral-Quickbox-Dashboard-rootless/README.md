@@ -25,7 +25,7 @@ Use **`feral-classic-quickbox-rootless`** for the Classic QuickBox-style Feral e
 - Host CPU, memory, disk, network, load and uptime, with scope clearly labelled.
 - My Slot process count, CPU and memory are limited to processes owned by the current account.
 - Live bandwidth chart and per-interface totals/speeds.
-- Service Control Center with status and optional Start / Restart / Stop only for services explicitly allow-listed in the private `services.ini`. Commands use argument arrays, not a shell; the browser submits only an ID and action.
+- Service Control Center with status and optional Start / Restart / Stop only for services explicitly allow-listed in the private `services.ini`. Commands are validated as argument arrays; PHP 7.4+ passes them directly to proc_open, while PHP 7.0–7.3 individually quotes every argument with escapeshellarg for compatibility. The browser submits only an ID and action.
 - Application shortcuts configured through private `APPS=`.
 - Classic Package Management Center presentation. It identifies compatible user-space applications and explains that root-only QuickBox package installation is unavailable on Feral shared slots; it does not pretend to install packages.
 - Private password hash, CSRF protection, persistent per-IP login throttling, private session storage, strict Content Security Policy and safe HTML output.
