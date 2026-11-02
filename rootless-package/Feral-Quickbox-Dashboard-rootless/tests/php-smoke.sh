@@ -13,6 +13,8 @@ cleanup(){
     echo "--- parsed service argv ---" >&2
     # shellcheck disable=SC2016
     php -r 'define("FQD_BOOTSTRAPPED",true); require $argv[1]; $s=fqd_services_config($argv[2],$argv[3]); var_export($s["sleepy"]["start"] ?? array()); echo "\\n";' "$PWD/public/inc/lib.php" "$cfg" "$tmp" >&2
+    echo "--- config-path marker ---" >&2
+    [[ ! -f "$tmp/spawn.config" ]] || cat "$tmp/spawn.config" >&2
     echo "--- PHP spawn environment marker ---" >&2
     [[ ! -f "$tmp/spawn.php" ]] || cat "$tmp/spawn.php" >&2
     echo "--- spawn launch log ---" >&2
@@ -52,7 +54,7 @@ match = fqd-nothing-here
 INI
 chmod 700 "$(dirname "$cfg")"; chmod 600 "$cfg"
 # shellcheck disable=SC2016
-php -r 'echo "<?php\nif (!defined(\x27FQD_BOOTSTRAPPED\x27)) { http_response_code(404); exit; }\nputenv(\x27FQD_SPAWN_DEBUG=\x27 . " . var_export($argv[2], true) . ");\nreturn " . var_export($argv[1], true) . ";\n";' "$cfg" "$tmp/spawn" >"$app/config-path.php"
+php -r 'echo "<?php\nif (!defined(\x27FQD_BOOTSTRAPPED\x27)) { http_response_code(404); exit; }\nputenv(\x27FQD_SPAWN_DEBUG=\x27 . " . var_export($argv[2], true) . ");\n@file_put_contents(" . var_export($argv[2] . ".config", true) . ", \x27config-path-loaded\\n\x27);\nreturn " . var_export($argv[1], true) . ";\n";' "$cfg" "$tmp/spawn" >"$app/config-path.php"
 # shellcheck disable=SC2016
 port="$(php -r '$s=stream_socket_server("tcp://127.0.0.1:0",$e,$m); echo parse_url("tcp://".stream_socket_get_name($s,false),PHP_URL_PORT); fclose($s);')"
 # shellcheck disable=SC2086
