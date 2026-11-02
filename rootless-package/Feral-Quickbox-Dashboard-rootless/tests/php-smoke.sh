@@ -2,7 +2,7 @@
 # PHP auth, subdirectory and rootless service-control smoke test
 set -Eeuo pipefail
 [[ ${EUID:-$(id -u)} -ne 0 ]] || { echo 'ERROR: run tests as a non-root user (the app refuses root by design).' >&2; exit 1; }
-tmp="$(mktemp -d)"; pid=""
+tmp="$(mktemp -d)"; pid=""; tail_bin=""
 cleanup(){
   status=$?
   if (( status != 0 )); then
@@ -17,7 +17,7 @@ cleanup(){
     pgrep -afu "$(id -u)" '(^|/)(tail)([[:space:]]|$)' >&2 || true
   fi
   [[ -z "$pid" ]] || kill "$pid" 2>/dev/null || true
-  pkill -u "$(id -u)" -x tail 2>/dev/null || true
+  [[ -z "$tail_bin" ]] || pkill -u "$(id -u)" -f "^$tail_bin -f /dev/null$" 2>/dev/null || true
   if (( status == 0 )); then rm -rf "$tmp"; else echo "DEBUG files retained at: $tmp" >&2; fi
 }
 trap cleanup EXIT
