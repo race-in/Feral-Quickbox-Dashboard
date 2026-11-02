@@ -12,7 +12,7 @@ t('split_args no shell expansion', fqd_split_args('echo $(id) ; rm') === array('
 
 $serviceCfgDir = sys_get_temp_dir() . '/fqd-service-config-' . fqd_pid();
 @mkdir($serviceCfgDir, 0700, true);
-$serviceIni = "[quoted]\\nlabel = Quote test\\nmatch = fqd-sleepy\\nstart = /bin/bash -c 'exec -a fqd-sleepy /usr/bin/sleep 600'\\n";
+$serviceIni = "[quoted]\nlabel = Quote test\nmatch = fqd-sleepy\nstart = /bin/bash -c 'exec -a fqd-sleepy /usr/bin/sleep 600'\n";
 file_put_contents($serviceCfgDir . '/services.ini', $serviceIni);
 $parsedServices = fqd_services_config($serviceCfgDir . '/config.env', $serviceCfgDir);
 t('service config preserves embedded command quotes', isset($parsedServices['quoted']['start'])
