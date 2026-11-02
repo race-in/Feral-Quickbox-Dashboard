@@ -67,7 +67,7 @@ metrics(){ curl -fsS -b "$tmp/cookies" "$url?action=metrics"; }
 # shellcheck disable=SC2016
 metrics | php -r '$d=json_decode(stream_get_contents(STDIN),true); if(empty($d["ok"])||!array_key_exists("cpu",$d["metrics"])||!array_key_exists("slot",$d["metrics"])||!is_array($d["metrics"]["services"])) exit(1);'
 # service control: CSRF required, unknown ids / ops rejected, start/stop work, only allow-listed names
-svc(){ curl -sS -o "$tmp/svc.out" -w '%{http_code}' -b "$tmp/cookies" -X POST -H 'Content-Type: application/json' "${@:2}" --data "$1" "$url?action=service"; }
+svc(){ curl --max-time 10 -sS -o "$tmp/svc.out" -w '%{http_code}' -b "$tmp/cookies" -X POST -H 'Content-Type: application/json' "${@:2}" --data "$1" "$url?action=service"; }
 [[ "$(svc '{"id":"sleepy","op":"start"}')" == 400 ]]
 [[ "$(svc '{"id":"nope","op":"start"}' -H "X-CSRF-Token: $csrf")" == 422 ]]
 [[ "$(svc '{"id":"sleepy","op":"rm -rf /"}' -H "X-CSRF-Token: $csrf")" == 422 ]]
@@ -84,6 +84,7 @@ if [[ "$start_code" != 200 ]]; then
   echo "ERROR: sleepy service start returned HTTP $start_code (expected 200)." >&2
   exit 1
 fi
+php -r '$d=json_decode(file_get_contents($argv[1]),true); if(!is_array($d)||empty($d["ok"])) { fwrite(STDERR,"ERROR: sleepy service start returned an empty/invalid success body.\\n"); exit(1); }' "$tmp/svc.out"
 # shellcheck disable=SC2016
 metrics | php -r '$d=json_decode(stream_get_contents(STDIN),true); foreach($d["metrics"]["services"] as $s) if($s["id"]==="sleepy"&&$s["running"]) exit(0); exit(1);'
 [[ "$(svc '{"id":"sleepy","op":"stop"}' -H "X-CSRF-Token: $csrf")" == 200 ]]
