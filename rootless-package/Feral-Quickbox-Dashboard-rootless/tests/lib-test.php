@@ -34,7 +34,9 @@ t('capability helpers agree with PHP', $canExec === function_exists('proc_open')
 if ($canExec) {
     // PID-reuse protection: a child started now, then verified with a WRONG start time must NOT be signalled.
     // Keep the temporary executable beside this test, not in /tmp: shared hosts may mount /tmp noexec.
-    $bin = __DIR__ . '/fqd-unit-sleepy-' . fqd_pid();
+    // Linux TASK_COMM_LEN stores exactly the first 15 bytes of this executable name.
+    $identityName = 'fqd-unit-sleepy';
+    $bin = __DIR__ . '/' . $identityName . '-' . fqd_pid();
     $sleepSource = is_executable('/usr/bin/sleep') ? '/usr/bin/sleep' : (is_executable('/bin/sleep') ? '/bin/sleep' : '');
     $copied = $sleepSource !== '' && @copy($sleepSource, $bin) && @chmod($bin, 0700);
     $proc = $copied ? fqd_proc_open_argv(
@@ -55,10 +57,10 @@ if ($canExec) {
             foreach (fqd_own_processes(true, true) as $p => $v) if ($p === $pid) $info = $v;
         }
         $identityOk = $info !== null && isset($info['start']) && is_numeric($info['start'])
-            && fqd_proc_matches($info, basename($bin));
+            && fqd_proc_matches($info, $identityName);
         t('child visible with pss', $info !== null && isset($info['pss']) && $info['pss'] > 0);
         t('child matched by name', $identityOk);
-        t('refuse stale start time (PID reuse)', $identityOk && fqd_signal_verified($pid, (int) $info['start'] + 12345, basename($bin)) === false);
+        t('refuse stale start time (PID reuse)', $identityOk && fqd_signal_verified($pid, (int) $info['start'] + 12345, $identityName) === false);
         t('refuse wrong service name', $identityOk && fqd_signal_verified($pid, (int) $info['start'], 'something-else') === false);
         t('refuse pid 1 and self', !fqd_signal_verified(1, 0, 'init') && !fqd_signal_verified(fqd_pid(), 0, 'php'));
 
@@ -66,7 +68,7 @@ if ($canExec) {
             usleep(100000);
             $st = @proc_get_status($proc);
             t('child still alive after refusals', is_array($st) && !empty($st['running']));
-            t('signal with correct identity', fqd_signal_verified($pid, (int) $info['start'], basename($bin)) === true);
+            t('signal with correct identity', fqd_signal_verified($pid, (int) $info['start'], $identityName) === true);
             usleep(300000);
             $st = @proc_get_status($proc);
             t('child terminated', is_array($st) && empty($st['running']));
