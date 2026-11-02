@@ -114,3 +114,20 @@ body.body{margin:0;min-width:320px;background:#d3d6dc;color:#696c74;font-family:
  .fqd-table{min-width:540px}
 }
 @media(prefers-reduced-motion:reduce){.leftpanel,.fqd-meter>i{transition:none!important}}
+
+/* Keep the secure PHP login view styled consistently alongside the vendored UI. */
+.login{min-height:100vh;display:grid;place-items:center;padding:22px;background:#d3d6dc}
+.loginbox{width:min(100%,410px);padding:34px 36px;border:1px solid #d7dce3;border-radius:3px;background:#fff;color:#696c74;box-shadow:0 14px 40px rgba(35,48,67,.18)}
+.login-logo{width:48px;height:48px;display:grid;place-items:center;background:#31a5b8;color:#fff;font-size:18px;font-weight:700;margin-bottom:23px}
+.eyebrow{font-size:10px;letter-spacing:1.2px;color:#8993a2;font-weight:700;margin:0 0 8px}
+.loginbox h1{font-size:26px;font-weight:600;color:#303744;margin:0 0 8px}
+.loginbox .muted{font-size:12px;color:#818b98}
+.loginbox .acc{color:#31a5b8}
+.loginbox form{display:grid;gap:10px;margin-top:24px}
+.loginbox label{font-size:11px;color:#596575}
+.loginbox input{height:42px;width:100%;padding:8px 11px;border:1px solid #d4dbe3;border-radius:3px;background:#fff;color:#353d49;box-shadow:inset 0 1px 1px rgba(0,0,0,.05)}
+.loginbox input:focus{border-color:#31a5b8;outline:0;box-shadow:0 0 0 2px rgba(49,165,184,.14)}
+.loginbox button{height:42px;border:0;border-radius:3px;background:#31a5b8;color:#fff;font-size:12px;font-weight:700;cursor:pointer}
+.loginbox button:hover{background:#2793a4}
+.loginbox .alert{margin:12px 0 0;color:#bd514b;font-size:11px}
+.loginbox .fine{text-align:center;color:#9aa2ad;font-size:10px;margin:20px 0 0}
