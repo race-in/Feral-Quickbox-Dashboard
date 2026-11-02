@@ -17,6 +17,8 @@ cleanup(){
     [[ ! -f "$tmp/spawn.config" ]] || cat "$tmp/spawn.config" >&2
     echo "--- PHP spawn environment marker ---" >&2
     [[ ! -f "$tmp/spawn.php" ]] || cat "$tmp/spawn.php" >&2
+    echo "--- shell wrapper entry ---" >&2
+    [[ ! -f "$tmp/spawn.entry" ]] || cat "$tmp/spawn.entry" >&2
     echo "--- spawn launch log ---" >&2
     [[ ! -f "$tmp/spawn.launch" ]] || cat "$tmp/spawn.launch" >&2
     echo "--- spawn stderr ---" >&2
