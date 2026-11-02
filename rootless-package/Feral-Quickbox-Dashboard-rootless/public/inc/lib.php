@@ -422,6 +422,10 @@ function fqd_spawn(array $argv, string $cwd): bool
     // Close every inherited descriptor >= 3 before detaching the child. Otherwise
     // a long-lived daemon can keep the HTTP connection open even after PHP responds.
     // /proc/self/fd is available on the supported Linux shared-hosting target.
+    $spawnDebug = getenv('FQD_SPAWN_DEBUG');
+    if (is_string($spawnDebug) && $spawnDebug !== '') {
+        @file_put_contents($spawnDebug . '.php', 'php_pid=' . fqd_pid() . "\\n");
+    }
     $script = 'for fd in /proc/self/fd/[0-9]*; do n=${fd##*/}; case "$n" in 0|1|2) continue ;; esac; eval "exec ${n}>&-" 2>/dev/null || :; done; if [ -n "${FQD_SPAWN_DEBUG:-}" ]; then printf "wrapper=%s\\n" "$" > "${FQD_SPAWN_DEBUG}.launch"; printf "argv:" >> "${FQD_SPAWN_DEBUG}.launch"; printf " <%s>" "$@" >> "${FQD_SPAWN_DEBUG}.launch"; printf "\\n" >> "${FQD_SPAWN_DEBUG}.launch"; command -v setsid >> "${FQD_SPAWN_DEBUG}.launch" 2>&1 || :; command -v nohup >> "${FQD_SPAWN_DEBUG}.launch" 2>&1 || :; if command -v setsid >/dev/null 2>&1; then setsid nohup "$@" >/dev/null 2>"${FQD_SPAWN_DEBUG}.stderr" </dev/null & else nohup "$@" >/dev/null 2>"${FQD_SPAWN_DEBUG}.stderr" </dev/null & fi; child=$!; echo "$child" > "${FQD_SPAWN_DEBUG}.pid"; sleep 1; kill -0 "$child" 2>>"${FQD_SPAWN_DEBUG}.launch" && echo "child_alive=yes" >> "${FQD_SPAWN_DEBUG}.launch" || echo "child_alive=no" >> "${FQD_SPAWN_DEBUG}.launch"; else if command -v setsid >/dev/null 2>&1; then setsid nohup "$@" >/dev/null 2>&1 </dev/null & else nohup "$@" >/dev/null 2>&1 </dev/null & fi; fi';
     $cmd = array_merge(array('/bin/sh', '-c', $script, 'fqd-start'), $argv);
     $p = fqd_proc_open_argv($cmd, array(array('file', '/dev/null', 'r'), array('file', '/dev/null', 'w'), array('file', '/dev/null', 'w')), $pipes, $cwd);
