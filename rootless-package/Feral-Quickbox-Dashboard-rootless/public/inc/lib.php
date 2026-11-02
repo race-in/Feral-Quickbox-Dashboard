@@ -128,8 +128,10 @@ function fqd_throttle_check(string $cacheDir, string $ip): int
     $k = hash('sha256', $ip);
     if (!is_array($d) || !isset($d[$k])) return 0;
     $e = $d[$k];
-    if (time() - (int) $e['t'] > 900) return 0;
-    return ((int) $e['n'] >= 5) ? max(1, 900 - (time() - (int) $e['t'])) : 0;
+    if (!is_array($e) || !isset($e['t'], $e['n']) || !is_numeric($e['t']) || !is_numeric($e['n'])) return 0;
+    $elapsed = time() - (int) $e['t'];
+    if ($elapsed < 0 || $elapsed > 900) return 0;
+    return ((int) $e['n'] >= 5) ? max(1, 900 - $elapsed) : 0;
 }
 
 function fqd_throttle_record(string $cacheDir, string $ip, bool $ok): void
@@ -235,12 +237,21 @@ function fqd_read_proc(string $d, int $page, bool $memory)
 
 function fqd_proc_matches(array $p, string $match): bool
 {
-    $m = strtolower($match);
-    if ($m === '') return false;
-    if (strtolower($p['comm']) === $m || strtolower(substr($p['comm'], 0, 15)) === substr($m, 0, 15)) return true;
-    foreach (array_slice($p['argv'], 0, 2) as $a) {
-        if (strtolower(basename($a)) === $m) return true;
-    }
+    $m = strtolower(trim($match));
+    if ($m === '' || strpos($m, '/') !== false || strpos($m, "\0") !== false) return false;
+
+    // Linux comm is truncated to 15 bytes. Never treat a shared 15-byte prefix
+    // as an identity: that can make Stop target an unrelated process.
+    $comm = strtolower((string) ($p['comm'] ?? ''));
+    if (strlen($m) <= 15 && $comm === $m) return true;
+
+    // argv[0] is the executable identity. Do not scan arbitrary arguments:
+    // a process must not match merely because its command line mentions a name.
+    $argv0 = isset($p['argv'][0]) ? strtolower(basename((string) $p['argv'][0])) : '';
+    if ($argv0 !== '' && $argv0 === $m) return true;
+
+    // For names longer than Linux TASK_COMM_LEN, require an exact argv[0]
+    // basename match; the truncated comm field alone is ambiguous.
     return false;
 }
 
@@ -462,7 +473,8 @@ function fqd_quota_scan_step(string $home, string $cacheDir, float $budget): boo
         ftruncate($fh, 0); flock($fh, LOCK_UN); fclose($fh); @unlink($stateFile);
         return true;
     }
-    if (count($st['stack']) > 200000) $st['stack'] = array_slice($st['stack'], -200000);
+    // Do not truncate the traversal stack: dropping queued directories silently
+    // under-reports account usage on large homes.
     ftruncate($fh, 0); rewind($fh); fwrite($fh, json_encode($st)); fflush($fh);
     flock($fh, LOCK_UN); fclose($fh);
     return false;
