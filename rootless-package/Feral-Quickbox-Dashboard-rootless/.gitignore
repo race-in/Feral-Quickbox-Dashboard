@@ -1,0 +1,23 @@
+# Local configuration and credentials
+*.env
+config.env
+.env*
+!.env.example
+
+# Runtime data
+.cache/
+data/
+logs/
+*.log
+*.pid
+
+# Node / tooling
+node_modules/
+dist/
+coverage/
+.nyc_output/
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/

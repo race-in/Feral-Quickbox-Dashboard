@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Shell, PHP and app tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          coverage: none
+      - name: Install ShellCheck
+        run: sudo apt-get update && sudo apt-get install --yes shellcheck
+      - name: Bash syntax
+        run: bash -n install.sh uninstall.sh tests/smoke.sh tests/php-smoke.sh tests/degraded-smoke.sh scripts/feral-preflight.sh
+      - name: ShellCheck
+        run: shellcheck --severity=style install.sh uninstall.sh tests/smoke.sh tests/php-smoke.sh tests/degraded-smoke.sh scripts/feral-preflight.sh
+      - name: PHP syntax
+        run: php -l public/index.php && php -l public/inc/lib.php && php -l tests/lib-test.php
+      - name: Installer smoke tests
+        run: bash tests/smoke.sh
+      - name: PHP auth and subdirectory tests
+        run: bash tests/php-smoke.sh
+      - name: Degraded-host tests (proc_open disabled)
+        run: bash tests/degraded-smoke.sh
+      - name: Read-only preflight
+        run: bash scripts/feral-preflight.sh
+      - name: Help output
+        run: |
+          bash install.sh --help
+          bash uninstall.sh --help
+          bash scripts/feral-preflight.sh --help
+
+  repository-hygiene:
+    name: Repository hygiene
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check whitespace errors
+        run: git diff --check
+      - name: Verify required files
+        run: |
+          test -s README.md
+          test -s LICENSE
+          test -s NOTICE
+          test -s docs/SECURITY.md
+          test -s docs/ROADMAP.md
+          test -s docs/UPSTREAM-REVIEW.md
+          test -s docs/CLASSIC-QUICKBOX-REFERENCE.md
+          test -s docs/FERAL-DEPLOYMENT.md
+          test -s public/index.php
+          test -s public/inc/lib.php
+          test -s config/services.example.ini
