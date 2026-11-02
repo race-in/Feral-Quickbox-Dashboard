@@ -8,6 +8,6 @@
 - Session ID rotates after login; login/logout use CSRF tokens. Cookies are HttpOnly, path-scoped and Secure on HTTPS; SameSite is set where supported.
 - Metrics API requires authentication and sends no-store responses. A nonce-based CSP blocks third-party scripts and frames.
 - /proc and load values may be host-wide. Filesystem capacity is not the same as a Feral account quota.
-- Service controls only act on ids in the private services.ini; commands are argv arrays run without shell interpretation; only same-uid processes are listed or signalled; the app refuses to run as root. Browser input is never executed.
+- Service controls only act on ids in the private services.ini; configured commands are parsed into argv arrays. PHP 7.4+ passes argv directly to proc_open. PHP 7.0–7.3 require a command string, so the compatibility helper applies escapeshellarg independently to every argument before calling proc_open. Only same-uid processes are listed or signalled; the app refuses to run as root. Browser input is never executed.
 - Login failures are counted per client IP in the private cache dir (5 failures / 15 min lockout); sessions are stored in the private data dir.
 - Uninstall removes only the marked dashboard and app data after confirmation. Private config/cache are preserved unless --purge is requested.
