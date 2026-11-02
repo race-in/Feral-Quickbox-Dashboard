@@ -147,6 +147,9 @@ $e = static function ($s) { return htmlspecialchars((string) $s, ENT_QUOTES, 'UT
 .qb-top-actions{margin-left:auto}.qb-host{background:#202020;border-color:#42464d;color:#c6ccd3}
 .qb-nav{position:fixed;display:block;top:64px;bottom:0;left:0;width:280px;min-height:0;margin:0;padding:13px 0 25px;overflow-y:auto;overflow-x:hidden;background:#2a2a2a;border:0;border-right:1px solid #1c1c1c;border-radius:0;z-index:100}
 .qb-nav a{display:block;width:100%;padding:13px 20px;margin:0;border:0;border-left:3px solid transparent;border-radius:0;color:#b7bdc5;font-size:12px}
+.qb-nav-label{padding:20px 20px 8px;color:#7f8996;font-size:9px;font-weight:800;letter-spacing:1.2px}
+.qb-nav a.qb-quicklink{padding-top:9px;padding-bottom:9px;font-size:11px;color:#aab3bf}
+.qb-nav a.qb-quicklink:hover{color:#fff}
 .qb-nav a:hover,.qb-nav a.active{color:#fff;background:#222;border:0;border-left:3px solid #31c1d2}
 .qb-nav i{display:inline-block;width:20px;color:#8da0b1}
 .qb-main{max-width:1680px;margin-left:280px;padding:84px 22px 28px}
@@ -223,6 +226,7 @@ table{width:100%;border-collapse:collapse;font-size:11px}th{text-align:left;font
     <a href="#pmc"><i class="fa">▦</i> Package Center</a>
     <a href="#apps"><i class="fa">▣</i> Applications</a>
     <a href="#system"><i class="fa">◈</i> System</a>
+    <?php if ($apps): ?><div class="qb-nav-label">YOUR APPLICATIONS</div><?php foreach ($apps as $a): ?><a class="qb-quicklink" href="<?php echo $e($a['url']); ?>" target="_blank" rel="noopener noreferrer"><i class="fa">↗</i><?php echo $e($a['label']); ?></a><?php endforeach; ?><?php endif; ?>
   </nav>
   <main class="qb-main" id="overview">
     <div class="qb-page-title"><div><p class="kicker">SERVER CONTROL PANEL</p><h1>Dashboard</h1><p class="muted">Server overview, network traffic and your slot services.</p></div><p class="updated" id="updated"><span class="dot off"></span>Connecting…</p></div>
@@ -284,7 +288,7 @@ function chart(){var c=el('network-chart');if(!c)return;var cs=getComputedStyle(
 function line(key,color){if(history.length<2)return;x.beginPath();history.forEach(function(p,i){var px=pad+(plotW*i/(maxPoints-1)),py=pad+plotH-(p[key]/max)*plotH;if(i===0)x.moveTo(px,py);else x.lineTo(px,py)});x.strokeStyle=color;x.lineWidth=2;x.lineJoin='round';x.lineCap='round';x.stroke();var p=history[history.length-1],px=pad+(plotW*(history.length-1)/(maxPoints-1)),py=pad+plotH-(p[key]/max)*plotH;x.beginPath();x.arc(px,py,3,0,Math.PI*2);x.fillStyle=color;x.fill()}
 line('rx',cs.getPropertyValue('--purple').trim()||'#a895ff');line('tx',cs.getPropertyValue('--blue').trim()||'#69b9ff')}
 function ifaces(m,now){var tb=el('ifaces');tb.innerHTML='';if(!m.network||!m.network.interfaces.length){var r=mk('tr'),c=mk('td','empty','Network counters are not readable on this host.');c.colSpan=5;r.appendChild(c);tb.appendChild(r);return}
-m.network.interfaces.forEach(function(i){var p=lastIf[i.name],rs=0,ts=0;if(p){var dt=(now-p.t)/1000;if(dt>0&&dt<60){rs=Math.max(0,i.rx-p.rx)/dt;ts=Math.max(0,i.tx-p.tx)/dt}}lastIf[i.name]={rx:i.rx,tx:i.tx,t:now};var r=mk('tr');r.appendChild(mk('td','nm',i.name));[bytes(rs)+'/s',bytes(ts)+'/s',bytes(i.rx),bytes(i.tx)].forEach(function(v){r.appendChild(mk('td','num',v))});tb.appendChild(r)})}
+m.network.interfaces.forEach(function(i){var p=lastIf[i.name],rs=0,ts=0;if(p){var dt=(now-p.t)/1000;if(dt>0&&dt<60){rs=Math.max(0,i.rx-p.rx)/dt;ts=Math.max(0,i.tx-p.tx)/dt}}lastIf[i.name]={rx:i.rx,tx:i.tx,t:now};var r=mk('tr');r.appendChild(mk('td','nm',i.name));[bytes(ts)+'/s',bytes(rs)+'/s',bytes(i.rx),bytes(i.tx)].forEach(function(v){r.appendChild(mk('td','num',v))});tb.appendChild(r)})}
 function act(id,op,label){if((op==='stop'||op==='restart')&&!window.confirm(op.charAt(0).toUpperCase()+op.slice(1)+' '+label+'?'))return;if(busy)return;busy=true;toast(op+'… '+label);
 fetch(base+'/?action=service',{method:'POST',credentials:'same-origin',cache:'no-store',headers:{'Content-Type':'application/json','X-CSRF-Token':csrf},body:JSON.stringify({id:id,op:op})}).then(function(r){return r.json().catch(function(){return{ok:false,message:'Unexpected response'}})}).then(function(d){toast(d.message||(d.ok?'Done':'Failed'),!d.ok);busy=false;poll()}).catch(function(){busy=false;toast('Request failed',true)})}
 function services(list,caps){var nt=el('svc-notice');if(caps&&caps.exec===false){nt.textContent='Start/Stop unavailable: this host disables proc_open, so processes cannot be launched from PHP. Status monitoring still works.';nt.hidden=false}else if(caps&&caps.procfs===false){nt.textContent='/proc is not readable here, so process status cannot be shown.';nt.hidden=false}else nt.hidden=true;var tb=el('svc');tb.innerHTML='';var run=0;list.forEach(function(s){if(s.running)run++});el('svc-count').textContent=run+' RUNNING';
