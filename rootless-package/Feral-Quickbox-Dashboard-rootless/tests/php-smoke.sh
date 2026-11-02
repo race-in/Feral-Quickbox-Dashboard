@@ -51,7 +51,7 @@ php -r 'echo "<?php\nif (!defined(\x27FQD_BOOTSTRAPPED\x27)) { http_response_cod
 # shellcheck disable=SC2016
 port="$(php -r '$s=stream_socket_server("tcp://127.0.0.1:0",$e,$m); echo parse_url("tcp://".stream_socket_get_name($s,false),PHP_URL_PORT); fclose($s);')"
 # shellcheck disable=SC2086
-php ${FQD_PHP_ARGS:-} -S "127.0.0.1:$port" -t "$web" >"$tmp/server.log" 2>&1 & pid=$!
+FQD_SPAWN_DEBUG="$tmp/spawn" php ${FQD_PHP_ARGS:-} -S "127.0.0.1:$port" -t "$web" >"$tmp/server.log" 2>&1 & pid=$!
 url="http://127.0.0.1:$port/Feral-Quickbox-Dashboard/"; ready=false
 attempt=0
 while ((attempt < 40)); do
