@@ -417,7 +417,13 @@ function fqd_spawn(array $argv, string $cwd): bool
     $cmd = array_merge(array('/bin/sh', '-c', $script, 'fqd-start'), $argv);
     $p = fqd_proc_open_argv($cmd, array(array('file', '/dev/null', 'r'), array('file', '/dev/null', 'w'), array('file', '/dev/null', 'w')), $pipes, $cwd);
     if (!is_resource($p)) return false;
-    return proc_close($p) === 0;
+    // The shell wrapper can report a non-zero status after handing off a detached
+    // child (for example, when the platform's setsid implementation behaves
+    // differently). Do not treat that status as proof of service failure:
+    // fqd_service_action() independently verifies the target process by UID,
+    // executable identity and start time before reporting success.
+    @proc_close($p);
+    return true;
 }
 
 /**
