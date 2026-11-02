@@ -29,7 +29,7 @@ The installer does not edit Nginx/PHP-FPM configuration, restart services, or to
 
 Edit `~/.config/feral-quickbox/services.ini` (copied from `config/services.example.ini`). Each section is an allow-listed service: `match` (process name), optional `start` / `stop` commands, optional `url`.
 
-- Commands are split into an argument list and run without a shell. The browser sends only a section name and `start|stop|restart`.
+- Commands are split into an argument list. PHP 7.4+ passes that list directly to `proc_open`; PHP 7.0–7.3 use a compatibility fallback that independently applies `escapeshellarg` to every argument before building the command string. The browser sends only a section name and `start|stop|restart`.
 - Only processes of your own uid are listed. Before any signal is sent the process identity is re-verified (same uid, same start time, still matches the service), which protects against PID reuse. A tiny window between the check and `kill()` cannot be removed from PHP.
 - Without a `stop` command the dashboard sends SIGTERM and never escalates to SIGKILL.
 - Common daemons that are running but not configured are shown read-only.
@@ -48,7 +48,7 @@ Page size is detected from the running process (not assumed to be 4 KiB).
 
 ## Verification status
 
-Automated (`tests/`, including `tests/degraded-smoke.sh` which runs everything with `proc_open`, `posix_*`, `getmypid`, `glob` disabled): installer, login/CSRF, subdirectory routing, lockout, service start/stop, PID-reuse refusal, quota `du` caching, run as a non-root user, also with PHP started without optional extensions.
+Automated (`tests/`, including `tests/degraded-smoke.sh`): installer, login/CSRF, subdirectory routing, lockout, service start/stop, PID-reuse refusal, quota `du` caching, non-root execution, PHP 7.0-compatible escaped-argument `proc_open` fallback (including CLI signal fallback), and degraded hosts with `proc_open`, `posix_*`, `getmypid`, `glob` and other optional functions disabled.
 
 **Not yet proven:** a real Feral PHP-FPM slot (`disable_functions`, `open_basedir` and `hidepid` can hide `/proc` or block `proc_open`), quota numbers against Feral's own accounting, and start/stop with each real daemon (rTorrent under screen, qBittorrent, Deluge, ...). Run `bash scripts/feral-preflight.sh` first; it reports `proc_open`, `smaps_rollup`, `CLK_TCK` and PHP extensions. After install, check each service's Start/Stop once by hand and compare quota with `quota -s` or your control panel.
 
