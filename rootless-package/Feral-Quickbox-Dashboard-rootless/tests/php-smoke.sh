@@ -13,24 +13,21 @@ cleanup(){
     echo "--- parsed service argv ---" >&2
     # shellcheck disable=SC2016
     php -r 'define("FQD_BOOTSTRAPPED",true); require $argv[1]; $s=fqd_services_config($argv[2],$argv[3]); var_export($s["sleepy"]["start"] ?? array()); echo "\\n";' "$PWD/public/inc/lib.php" "$cfg" "$tmp" >&2
-    echo "--- spawn argv ---" >&2
-    [[ ! -f "$tmp/spawn.argv" ]] || cat "$tmp/spawn.argv" >&2
-    echo "--- child stderr ---" >&2
-    [[ ! -f "$tmp/spawn.child.log" ]] || cat "$tmp/spawn.child.log" >&2
-    echo "--- detached PID ---" >&2
-    if [[ -f "$tmp/spawn.pid" ]]; then p="$(cat "$tmp/spawn.pid")"; ps -p "$p" -o pid,ppid,stat,args >&2 || true; fi
     echo "--- matching process snapshot ---" >&2
-    pgrep -afu "$(id -u)" 'fqd-sleepy|sleep 600|exec -a' >&2 || true
+    pgrep -afu "$(id -u)" '(^|/)(tail)([[:space:]]|$)' >&2 || true
   fi
   [[ -z "$pid" ]] || kill "$pid" 2>/dev/null || true
-  pkill -u "$(id -u)" -f '^fqd-sleepy([[:space:]]|$)' 2>/dev/null || true
+  pkill -u "$(id -u)" -x tail 2>/dev/null || true
   if (( status == 0 )); then rm -rf "$tmp"; else echo "DEBUG files retained at: $tmp" >&2; fi
 }
 trap cleanup EXIT
 web="$tmp/www"; app="$web/Feral-Quickbox-Dashboard"; cfg="$tmp/private/config.env"
-bash_bin="$(command -v bash)"; sleep_bin="$(command -v sleep)"
-export FQD_SPAWN_DEBUG="$tmp/spawn"
-[[ -x "$bash_bin" && -x "$sleep_bin" ]] || { echo 'ERROR: bash and sleep are required for the service smoke test.' >&2; exit 1; }
+tail_bin="$(command -v tail)"
+[[ -x "$tail_bin" ]] || { echo 'ERROR: tail is required for the service smoke test.' >&2; exit 1; }
+if pgrep -u "$(id -u)" -x tail >/dev/null 2>&1; then
+  echo 'ERROR: a tail process already belongs to this account; refusing to signal an unrelated process.' >&2
+  exit 1
+fi
 mkdir -p "$app" "$(dirname "$cfg")" "$tmp/cache" "$tmp/data"
 cp -r public/. "$app/"
 # shellcheck disable=SC2016
@@ -39,8 +36,8 @@ printf 'PASSWORD_HASH="%s"\nHOME_PATH=%s\nDATA_PATH=%s\nCACHE_PATH=%s\nAPPS="ruT
 cat >"$(dirname "$cfg")/services.ini" <<INI
 [sleepy]
 label = Sleepy test
-match = fqd-sleepy
-start = $bash_bin -c 'exec -a fqd-sleepy $sleep_bin 600'
+match = tail
+start = $tail_bin -f /dev/null
 [nostart]
 label = No start
 match = fqd-nothing-here
@@ -51,7 +48,7 @@ php -r 'echo "<?php\nif (!defined(\x27FQD_BOOTSTRAPPED\x27)) { http_response_cod
 # shellcheck disable=SC2016
 port="$(php -r '$s=stream_socket_server("tcp://127.0.0.1:0",$e,$m); echo parse_url("tcp://".stream_socket_get_name($s,false),PHP_URL_PORT); fclose($s);')"
 # shellcheck disable=SC2086
-FQD_SPAWN_DEBUG="$tmp/spawn" php ${FQD_PHP_ARGS:-} -S "127.0.0.1:$port" -t "$web" >"$tmp/server.log" 2>&1 & pid=$!
+php ${FQD_PHP_ARGS:-} -S "127.0.0.1:$port" -t "$web" >"$tmp/server.log" 2>&1 & pid=$!
 url="http://127.0.0.1:$port/Feral-Quickbox-Dashboard/"; ready=false
 attempt=0
 while ((attempt < 40)); do
