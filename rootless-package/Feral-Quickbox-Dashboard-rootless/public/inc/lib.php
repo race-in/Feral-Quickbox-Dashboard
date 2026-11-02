@@ -318,7 +318,16 @@ function fqd_services_config(string $configFile, string $home): array
     if (!is_array($ini)) return $out;
     foreach ($ini as $id => $s) {
         if (!is_array($s) || !preg_match('/^[a-z0-9_-]{1,32}$/', (string) $id)) continue;
-        $strip = static function ($v) { return trim((string) $v, " \t\"'"); };
+        $strip = static function ($v) {
+            $v = trim((string) $v);
+            $len = strlen($v);
+            // Remove only a matching quote pair around the WHOLE INI value.
+            // Preserve embedded command quotes for fqd_split_args().
+            if ($len >= 2 && (($v[0] === '"' && $v[$len - 1] === '"') || ($v[0] === "'" && $v[$len - 1] === "'"))) {
+                $v = substr($v, 1, -1);
+            }
+            return $v;
+        };
         $match = $strip($s['match'] ?? $id);
         if ($match === '') continue;
         $start = isset($s['start']) ? fqd_split_args(fqd_expand_home($strip($s['start']), $home)) : array();
