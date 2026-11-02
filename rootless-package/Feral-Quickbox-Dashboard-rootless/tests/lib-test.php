@@ -9,6 +9,16 @@ t('not root', !fqd_is_root());
 t('CLK_TCK sane', in_array(fqd_clk_tck(), array(100, 250, 300, 1000), true) || (fqd_clk_tck() > 0 && fqd_clk_tck() <= 10000));
 t('split_args quotes', fqd_split_args('a "b c" \'d e\' f') === array('a', 'b c', 'd e', 'f'));
 t('split_args no shell expansion', fqd_split_args('echo $(id) ; rm') === array('echo', '$(id)', ';', 'rm'));
+
+$serviceCfgDir = sys_get_temp_dir() . '/fqd-service-config-' . fqd_pid();
+@mkdir($serviceCfgDir, 0700, true);
+$serviceIni = "[quoted]\\nlabel = Quote test\\nmatch = fqd-sleepy\\nstart = /bin/bash -c 'exec -a fqd-sleepy /usr/bin/sleep 600'\\n";
+file_put_contents($serviceCfgDir . '/services.ini', $serviceIni);
+$parsedServices = fqd_services_config($serviceCfgDir . '/config.env', $serviceCfgDir);
+t('service config preserves embedded command quotes', isset($parsedServices['quoted']['start'])
+    && $parsedServices['quoted']['start'] === array('/bin/bash', '-c', 'exec -a fqd-sleepy /usr/bin/sleep 600'));
+@unlink($serviceCfgDir . '/services.ini');
+@rmdir($serviceCfgDir);
 t('process match exact comm only', fqd_proc_matches(array('comm' => 'qbittorrent', 'argv' => array('/usr/bin/qbittorrent')), 'qbittorrent'));
 t('process match rejects 15-byte prefix collision', !fqd_proc_matches(array('comm' => 'qbittorrent-nox', 'argv' => array('/usr/bin/qbittorrent-nox')), 'qbittorrent'));
 t('process match rejects argument-only match', !fqd_proc_matches(array('comm' => 'python3', 'argv' => array('/usr/bin/python3', 'qbittorrent')), 'qbittorrent'));
