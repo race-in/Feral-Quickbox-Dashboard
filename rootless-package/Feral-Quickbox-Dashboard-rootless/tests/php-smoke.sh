@@ -47,7 +47,7 @@ grep -q 'Welcome to your slot' "$tmp/dashboard"
 grep -q 'network-chart' "$tmp/dashboard"
 grep -q 'Your services' "$tmp/dashboard"
 grep -q 'href="/rutorrent/"' "$tmp/dashboard"
-! grep -q 'javascript:' "$tmp/dashboard"
+if grep -q 'javascript:' "$tmp/dashboard"; then echo 'ERROR: unsafe javascript URL rendered' >&2; exit 1; fi
 csrf="$(sed -n 's/.*name="csrf" value="\([a-f0-9]*\)".*/\1/p' "$tmp/dashboard" | head -1)"
 metrics(){ curl -fsS -b "$tmp/cookies" "$url?action=metrics"; }
 # shellcheck disable=SC2016
