@@ -3,7 +3,17 @@
 set -Eeuo pipefail
 [[ ${EUID:-$(id -u)} -ne 0 ]] || { echo 'ERROR: run tests as a non-root user (the app refuses root by design).' >&2; exit 1; }
 tmp="$(mktemp -d)"; pid=""
-cleanup(){ [[ -z "$pid" ]] || kill "$pid" 2>/dev/null || true; pkill -u "$(id -u)" -f "$tmp/fqd-sleepy" 2>/dev/null || true; rm -rf "$tmp"; }
+cleanup(){
+  status=$?
+  if (( status != 0 )); then
+    echo "ERROR: PHP smoke test failed; diagnostics from $tmp follow:" >&2
+    if [[ -f "$tmp/svc.out" ]]; then echo "--- service response ---" >&2; cat "$tmp/svc.out" >&2; echo >&2; fi
+    if [[ -f "$tmp/server.log" ]]; then echo "--- PHP server log ---" >&2; tail -n 80 "$tmp/server.log" >&2; fi
+  fi
+  [[ -z "$pid" ]] || kill "$pid" 2>/dev/null || true
+  pkill -u "$(id -u)" -f "$tmp/fqd-sleepy" 2>/dev/null || true
+  if (( status == 0 )); then rm -rf "$tmp"; else echo "DEBUG files retained at: $tmp" >&2; fi
+}
 trap cleanup EXIT
 web="$tmp/www"; app="$web/Feral-Quickbox-Dashboard"; cfg="$tmp/private/config.env"
 mkdir -p "$app" "$(dirname "$cfg")" "$tmp/cache" "$tmp/data"
@@ -69,7 +79,11 @@ if [[ "${FQD_DEGRADED:-0}" == 1 ]]; then
   # shellcheck disable=SC2016
   metrics | php -r '$d=json_decode(stream_get_contents(STDIN),true); $m=$d["metrics"]; if($m["capabilities"]["exec"]!==false) exit(1); foreach($m["services"] as $s) if($s["can_start"]) exit(1); if(!is_array($m["slot"])||$m["memory"]===null) exit(1);'
 else
-[[ "$(svc '{"id":"sleepy","op":"start"}' -H "X-CSRF-Token: $csrf")" == 200 ]]
+start_code="$(svc '{"id":"sleepy","op":"start"}' -H "X-CSRF-Token: $csrf")"
+if [[ "$start_code" != 200 ]]; then
+  echo "ERROR: sleepy service start returned HTTP $start_code (expected 200)." >&2
+  exit 1
+fi
 # shellcheck disable=SC2016
 metrics | php -r '$d=json_decode(stream_get_contents(STDIN),true); foreach($d["metrics"]["services"] as $s) if($s["id"]==="sleepy"&&$s["running"]) exit(0); exit(1);'
 [[ "$(svc '{"id":"sleepy","op":"stop"}' -H "X-CSRF-Token: $csrf")" == 200 ]]
