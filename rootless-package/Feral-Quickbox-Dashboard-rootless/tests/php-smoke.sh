@@ -13,6 +13,12 @@ cleanup(){
     echo "--- parsed service argv ---" >&2
     # shellcheck disable=SC2016
     php -r 'define("FQD_BOOTSTRAPPED",true); require $argv[1]; $s=fqd_services_config($argv[2],$argv[3]); var_export($s["sleepy"]["start"] ?? array()); echo "\\n";' "$PWD/public/inc/lib.php" "$cfg" "$tmp" >&2
+    echo "--- spawn launch log ---" >&2
+    [[ ! -f "$tmp/spawn.launch" ]] || cat "$tmp/spawn.launch" >&2
+    echo "--- spawn stderr ---" >&2
+    [[ ! -f "$tmp/spawn.stderr" ]] || cat "$tmp/spawn.stderr" >&2
+    echo "--- detached PID ---" >&2
+    if [[ -f "$tmp/spawn.pid" ]]; then p="$(cat "$tmp/spawn.pid")"; ps -p "$p" -o pid,ppid,stat,args >&2 || true; fi
     echo "--- matching process snapshot ---" >&2
     pgrep -afu "$(id -u)" '(^|/)(tail)([[:space:]]|$)' >&2 || true
   fi
@@ -48,7 +54,7 @@ php -r 'echo "<?php\nif (!defined(\x27FQD_BOOTSTRAPPED\x27)) { http_response_cod
 # shellcheck disable=SC2016
 port="$(php -r '$s=stream_socket_server("tcp://127.0.0.1:0",$e,$m); echo parse_url("tcp://".stream_socket_get_name($s,false),PHP_URL_PORT); fclose($s);')"
 # shellcheck disable=SC2086
-php ${FQD_PHP_ARGS:-} -S "127.0.0.1:$port" -t "$web" >"$tmp/server.log" 2>&1 & pid=$!
+FQD_SPAWN_DEBUG="$tmp/spawn" php ${FQD_PHP_ARGS:-} -S "127.0.0.1:$port" -t "$web" >"$tmp/server.log" 2>&1 & pid=$!
 url="http://127.0.0.1:$port/Feral-Quickbox-Dashboard/"; ready=false
 attempt=0
 while ((attempt < 40)); do
