@@ -17,6 +17,9 @@ cleanup(){
     [[ ! -f "$tmp/spawn.config" ]] || cat "$tmp/spawn.config" >&2
     echo "--- PHP spawn environment marker ---" >&2
     [[ ! -f "$tmp/spawn.php" ]] || cat "$tmp/spawn.php" >&2
+    echo "--- inherited descriptors ---" >&2
+    [[ ! -f "$tmp/spawn.fds-before" ]] || cat "$tmp/spawn.fds-before" >&2
+    [[ ! -f "$tmp/spawn.fds-after" ]] || cat "$tmp/spawn.fds-after" >&2
     echo "--- shell wrapper entry ---" >&2
     [[ ! -f "$tmp/spawn.entry" ]] || cat "$tmp/spawn.entry" >&2
     echo "--- spawn launch log ---" >&2
