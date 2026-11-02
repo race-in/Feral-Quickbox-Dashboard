@@ -32,22 +32,52 @@ $canExec = fqd_can_exec();
 t('page size sane', in_array(fqd_page_size(), array(4096, 8192, 16384, 65536), true));
 t('capability helpers agree with PHP', $canExec === function_exists('proc_open'));
 if ($canExec) {
-// PID-reuse protection: a child started now, then verified with a WRONG start time must NOT be signalled
-$bin = sys_get_temp_dir() . '/fqd-unit-sleepy-' . fqd_pid();
-copy(trim((string) shell_exec('command -v sleep')), $bin); chmod($bin, 0755);
-$proc = proc_open(array($bin, '60'), array(array('file', '/dev/null', 'r'), array('file', '/dev/null', 'w'), array('file', '/dev/null', 'w')), $pipes);
-usleep(300000);
-$st = proc_get_status($proc); $pid = $st['pid'];
-$info = null; foreach (fqd_own_processes(true, true) as $p => $v) if ($p === $pid) $info = $v;
-t('child visible with pss', $info !== null && $info['pss'] > 0);
-t('child matched by name', $info !== null && fqd_proc_matches($info, basename($bin)));
-t('refuse stale start time (PID reuse)', fqd_signal_verified($pid, $info['start'] + 12345, basename($bin)) === false);
-t('refuse wrong service name', fqd_signal_verified($pid, $info['start'], 'something-else') === false);
-t('refuse pid 1 and self', !fqd_signal_verified(1, 0, 'init') && !fqd_signal_verified(fqd_pid(), 0, 'php'));
-usleep(100000); $st = proc_get_status($proc); t('child still alive after refusals', $st['running']);
-t('signal with correct identity', fqd_signal_verified($pid, $info['start'], basename($bin)) === true);
-usleep(300000); $st = proc_get_status($proc); t('child terminated', !$st['running']);
-proc_close($proc); @unlink($bin);
+// PID-reuse protection: a child started now, then verified with a WRONG start time must NOT be signalled.
+// Put the temporary executable beside this test, not in /tmp: shared hosts may mount /tmp noexec.
+$bin = __DIR__ . '/fqd-unit-sleepy-' . fqd_pid();
+$sleepSource = is_executable('/usr/bin/sleep') ? '/usr/bin/sleep' : (is_executable('/bin/sleep') ? '/bin/sleep' : '');
+$copied = $sleepSource !== '' && @copy($sleepSource, $bin) && @chmod($bin, 0700);
+$proc = $copied ? fqd_proc_open_argv(
+    array($bin, '60'),
+    array(array('file', '/dev/null', 'r'), array('file', '/dev/null', 'w'), array('file', '/dev/null', 'w')),
+    $pipes
+) : false;
+
+if (!is_resource($proc)) {
+    t('unit child process launched with PHP-version-compatible proc_open', false);
+    @unlink($bin);
+} else {
+    usleep(300000);
+    $st = @proc_get_status($proc);
+    $pid = is_array($st) && isset($st['pid']) ? (int) $st['pid'] : 0;
+    $info = null;
+    if ($pid > 0) {
+        foreach (fqd_own_processes(true, true) as $p => $v) if ($p === $pid) $info = $v;
+    }
+    $identityOk = $info !== null && isset($info['start']) && is_numeric($info['start']);
+    t('child visible with pss', $info !== null && isset($info['pss']) && $info['pss'] > 0);
+    t('child matched by name', $info !== null && fqd_proc_matches($info, basename($bin)));
+    t('refuse stale start time (PID reuse)', $identityOk && fqd_signal_verified($pid, (int) $info['start'] + 12345, basename($bin)) === false);
+    t('refuse wrong service name', $identityOk && fqd_signal_verified($pid, (int) $info['start'], 'something-else') === false);
+    t('refuse pid 1 and self', !fqd_signal_verified(1, 0, 'init') && !fqd_signal_verified(fqd_pid(), 0, 'php'));
+
+    if ($identityOk && fqd_proc_matches($info, basename($bin))) {
+        usleep(100000);
+        $st = @proc_get_status($proc);
+        t('child still alive after refusals', is_array($st) && !empty($st['running']));
+        t('signal with correct identity', fqd_signal_verified($pid, (int) $info['start'], basename($bin)) === true);
+        usleep(300000);
+        $st = @proc_get_status($proc);
+        t('child terminated', is_array($st) && empty($st['running']));
+    } else {
+        t('child still alive after refusals', false);
+        t('signal with correct identity', false);
+        t('child terminated', false);
+        if (function_exists('proc_terminate')) @proc_terminate($proc);
+    }
+    @proc_close($proc);
+    @unlink($bin);
+}
 } else {
     t('degraded: spawn refused, not fatal', fqd_spawn(array('true'), '/') === false);
     t('degraded: verified signal refuses without exec/posix or still safe', fqd_signal_verified(1, 0, 'init') === false);
