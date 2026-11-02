@@ -9,6 +9,11 @@ cleanup(){
     echo "ERROR: PHP smoke test failed; diagnostics from $tmp follow:" >&2
     if [[ -f "$tmp/svc.out" ]]; then echo "--- service response ---" >&2; cat "$tmp/svc.out" >&2; echo >&2; fi
     if [[ -f "$tmp/server.log" ]]; then echo "--- PHP server log ---" >&2; tail -n 80 "$tmp/server.log" >&2; fi
+    if [[ -f "$(dirname "$cfg")/services.ini" ]]; then echo "--- private services.ini ---" >&2; cat "$(dirname "$cfg")/services.ini" >&2; fi
+    echo "--- parsed service argv ---" >&2
+    php -r 'define("FQD_BOOTSTRAPPED",true); require $argv[1]; $s=fqd_services_config($argv[2],$argv[3]); var_export($s["sleepy"]["start"] ?? array()); echo "\\n";' "$PWD/public/inc/lib.php" "$cfg" "$tmp" >&2
+    echo "--- matching process snapshot ---" >&2
+    pgrep -afu "$(id -u)" 'fqd-sleepy|sleep 600|exec -a' >&2 || true
   fi
   [[ -z "$pid" ]] || kill "$pid" 2>/dev/null || true
   pkill -u "$(id -u)" -f '^fqd-sleepy([[:space:]]|$)' 2>/dev/null || true
