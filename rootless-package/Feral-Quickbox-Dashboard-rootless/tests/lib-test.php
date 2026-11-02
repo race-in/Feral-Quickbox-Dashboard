@@ -33,21 +33,19 @@ t('page size sane', in_array(fqd_page_size(), array(4096, 8192, 16384, 65536), t
 t('capability helpers agree with PHP', $canExec === function_exists('proc_open'));
 if ($canExec) {
     // PID-reuse protection: a child started now, then verified with a WRONG start time must NOT be signalled.
-    // Use bash exec -a so the test does not need to copy or execute a temporary binary.
-    $bashBin = is_executable('/bin/bash') ? '/bin/bash' : '';
-    $sleepBin = is_executable('/usr/bin/sleep') ? '/usr/bin/sleep' : (is_executable('/bin/sleep') ? '/bin/sleep' : '');
-    $serviceName = 'fqd-unit-sleepy';
-    $command = ($bashBin !== '' && $sleepBin !== '')
-        ? array($bashBin, '-c', 'exec -a ' . $serviceName . ' ' . escapeshellarg($sleepBin) . ' 60')
-        : array();
-    $proc = $command ? fqd_proc_open_argv(
-        $command,
+    // Keep the temporary executable beside this test, not in /tmp: shared hosts may mount /tmp noexec.
+    $bin = __DIR__ . '/fqd-unit-sleepy-' . fqd_pid();
+    $sleepSource = is_executable('/usr/bin/sleep') ? '/usr/bin/sleep' : (is_executable('/bin/sleep') ? '/bin/sleep' : '');
+    $copied = $sleepSource !== '' && @copy($sleepSource, $bin) && @chmod($bin, 0700);
+    $proc = $copied ? fqd_proc_open_argv(
+        array($bin, '60'),
         array(array('file', '/dev/null', 'r'), array('file', '/dev/null', 'w'), array('file', '/dev/null', 'w')),
         $pipes
     ) : false;
 
     if (!is_resource($proc)) {
         t('unit child process launched with PHP-version-compatible proc_open', false);
+        @unlink($bin);
     } else {
         usleep(300000);
         $st = @proc_get_status($proc);
@@ -57,10 +55,10 @@ if ($canExec) {
             foreach (fqd_own_processes(true, true) as $p => $v) if ($p === $pid) $info = $v;
         }
         $identityOk = $info !== null && isset($info['start']) && is_numeric($info['start'])
-            && fqd_proc_matches($info, $serviceName);
+            && fqd_proc_matches($info, basename($bin));
         t('child visible with pss', $info !== null && isset($info['pss']) && $info['pss'] > 0);
         t('child matched by name', $identityOk);
-        t('refuse stale start time (PID reuse)', $identityOk && fqd_signal_verified($pid, (int) $info['start'] + 12345, $serviceName) === false);
+        t('refuse stale start time (PID reuse)', $identityOk && fqd_signal_verified($pid, (int) $info['start'] + 12345, basename($bin)) === false);
         t('refuse wrong service name', $identityOk && fqd_signal_verified($pid, (int) $info['start'], 'something-else') === false);
         t('refuse pid 1 and self', !fqd_signal_verified(1, 0, 'init') && !fqd_signal_verified(fqd_pid(), 0, 'php'));
 
@@ -68,7 +66,7 @@ if ($canExec) {
             usleep(100000);
             $st = @proc_get_status($proc);
             t('child still alive after refusals', is_array($st) && !empty($st['running']));
-            t('signal with correct identity', fqd_signal_verified($pid, (int) $info['start'], $serviceName) === true);
+            t('signal with correct identity', fqd_signal_verified($pid, (int) $info['start'], basename($bin)) === true);
             usleep(300000);
             $st = @proc_get_status($proc);
             t('child terminated', is_array($st) && empty($st['running']));
@@ -79,6 +77,7 @@ if ($canExec) {
             if (function_exists('proc_terminate')) @proc_terminate($proc);
         }
         @proc_close($proc);
+        @unlink($bin);
     }
 } else {
     t('degraded: spawn refused, not fatal', fqd_spawn(array('true'), '/') === false);
