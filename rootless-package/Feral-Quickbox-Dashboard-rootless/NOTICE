@@ -10,3 +10,19 @@ affiliated with Feral Hosting or the QuickBox Lite maintainers.
 No upstream source files (including QuickBox/QB Classic dashboard code or assets) are copied; the layout and feature set are re-implemented independently. Any later
 adaptation of upstream source must preserve applicable copyright notices
 and comply with the upstream GPL license.
+
+
+QuickBox Lite UI assets included in this Feral edition:
+- public/assets/quickbox-defaulted.css and public/assets/quickbox-smoked.css
+  are derived from the QuickBox Lite theme styles:
+  https://github.com/amefs/quickbox-lite/tree/master/setup/themes
+  SPDX-License-Identifier: GPL-3.0-or-later (upstream header preserved).
+- public/assets/resources.svg and public/img/logo-light.png and
+  public/fonts/glyphicons-halflings-regular.woff2 are sourced from the
+  QuickBox Lite dashboard distribution; see the upstream repository and its
+  GPL-3.0-or-later license.
+- Google Fonts imports were removed from the vendored CSS. System font
+  fallbacks are used to avoid third-party font requests.
+- QuickBox Lite's React/WebSocket backend, privileged package scripts and
+  root-level service operations are not included. Feral authentication,
+  metrics, process ownership checks and service allow-list remain rootless.

@@ -2,7 +2,7 @@
 
 # Feral QuickBox Dashboard
 
-**Classic QuickBox dashboard experience, adapted for Feral rootless shared hosting.**
+**QuickBox Lite dashboard UI, adapted for Feral rootless shared hosting.**
 
 [![CI](https://github.com/race-in/Feral-Quickbox-Dashboard/actions/workflows/ci.yml/badge.svg)](https://github.com/race-in/Feral-Quickbox-Dashboard/actions/workflows/ci.yml)
 [![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](LICENSE)
@@ -11,7 +11,7 @@
 
 > **Status: Experimental.** This branch is the Classic UI port. PHP smoke tests and CI must pass before a live upgrade; existing deployments are not changed automatically.
 
-This edition brings back the familiar QuickBox / QuickBox Lite dashboard composition: top navigation, server-stat panels, bandwidth monitor, per-interface traffic table, Service Control Center, Package Management Center, application shortcuts and system-health panels. The implementation is independently written for Feral's shared-hosting constraints and keeps the existing PHP-FPM stack.
+The UI now follows QuickBox Lite's original fixed header and logo panel, three-tab left navigation, QuickBox Lite menu dropdown, Bootstrap/Quirk dashboard grid, left-side bandwidth/service/package panels and right-side load, CPU, disk and RAM panels. The Defaulted and Smoked themes, logo and Glyphicons asset are included with attribution. Authentication, metrics and service controls remain PHP-only and Feral-rootless; no upstream Node/WebSocket backend or privileged package scripts are used.
 
 ## Branch
 
@@ -61,6 +61,6 @@ qBittorrent, Deluge, rTorrent and Transmission API integration is separate work;
 
 ## Upstream and license
 
-The UI is informed by the [Classic QuickBox dashboard](https://github.com/QuickBox/QB/tree/master/dashboard) and [QuickBox Lite dashboard](https://github.com/amefs/quickbox-lite/tree/master/setup/dashboard). This branch does not vendor their PHP/TypeScript backend, package scripts or binary assets. The Feral backend is purpose-built and rootless. See [upstream review](docs/UPSTREAM-REVIEW.md), [Classic reference audit](docs/CLASSIC-QUICKBOX-REFERENCE.md) and [security model](docs/SECURITY.md).
+The visual layer includes the QuickBox Lite CSS themes, logo and Glyphicons asset from [QuickBox Lite](https://github.com/amefs/quickbox-lite), distributed under their applicable notices and license. The Feral authentication, metrics, service allow-list and process-control backend is independently implemented and rootless. No upstream Node/WebSocket backend or privileged package scripts are included. See [upstream review](docs/UPSTREAM-REVIEW.md), [Classic reference audit](docs/CLASSIC-QUICKBOX-REFERENCE.md) and [security model](docs/SECURITY.md).
 
 Independent community project; not affiliated with Feral Hosting or QuickBox maintainers.
