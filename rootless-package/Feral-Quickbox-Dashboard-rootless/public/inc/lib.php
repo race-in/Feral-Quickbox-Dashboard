@@ -157,6 +157,33 @@ function fqd_throttle_record(string $cacheDir, string $ip, bool $ok)
     fclose($fh);
 }
 
+/* -------------------------------------------------------- safe proc_open */
+
+/**
+ * Start a fixed argv command on both modern PHP and PHP 7.0.
+ *
+ * PHP added array-form proc_open commands in 7.4. On older runtimes each
+ * argument is independently quoted before passing a command string to the
+ * platform shell. No browser input is accepted here; callers provide only
+ * fixed program names and arguments loaded from trusted local configuration.
+ *
+ * FQD_FORCE_LEGACY_PROC_OPEN=1 exercises the compatibility path in CI.
+ */
+function fqd_proc_open_argv(array $argv, array $descriptors, &$pipes, $cwd = null)
+{
+    if (!$argv) return false;
+    if (PHP_VERSION_ID >= 70400 && getenv('FQD_FORCE_LEGACY_PROC_OPEN') !== '1') {
+        return @proc_open($argv, $descriptors, $pipes, $cwd);
+    }
+    if (!function_exists('escapeshellarg')) return false;
+    $quoted = array();
+    foreach ($argv as $arg) {
+        if (!is_scalar($arg)) return false;
+        $quoted[] = escapeshellarg((string) $arg);
+    }
+    return @proc_open(implode(' ', $quoted), $descriptors, $pipes, $cwd);
+}
+
 /* ---------------------------------------------------------------- /proc */
 
 /** Clock ticks per second (getconf, cached). USER_HZ is 100 on all mainstream Linux; that is also the fallback when proc_open is disabled. */
@@ -167,7 +194,7 @@ function fqd_clk_tck(): int
     $hz = 0;
     if (isset($_SESSION['clk_tck'])) $hz = (int) $_SESSION['clk_tck'];
     if ($hz < 1 && fqd_can_exec()) {
-        $p = @proc_open(array('getconf', 'CLK_TCK'), array(array('file', '/dev/null', 'r'), array('pipe', 'w'), array('file', '/dev/null', 'w')), $pipes);
+        $p = fqd_proc_open_argv(array('getconf', 'CLK_TCK'), array(array('file', '/dev/null', 'r'), array('pipe', 'w'), array('file', '/dev/null', 'w')), $pipes);
         if (is_resource($p)) {
             $out = stream_get_contents($pipes[1]); fclose($pipes[1]); proc_close($p);
             $hz = (int) trim((string) $out);
@@ -374,7 +401,7 @@ function fqd_signal_verified(int $pid, int $startTicks, string $match, string $s
     $num = $sig === 'KILL' ? 9 : 15;
     if (function_exists('posix_kill')) return @posix_kill($pid, $num);
     if (!fqd_can_exec()) return false;
-    $q = @proc_open(array('kill', '-' . $sig, (string) $pid), array(array('file', '/dev/null', 'r'), array('file', '/dev/null', 'w'), array('file', '/dev/null', 'w')), $pipes);
+    $q = fqd_proc_open_argv(array('kill', '-' . $sig, (string) $pid), array(array('file', '/dev/null', 'r'), array('file', '/dev/null', 'w'), array('file', '/dev/null', 'w')), $pipes);
     return is_resource($q) ? proc_close($q) === 0 : false;
 }
 
@@ -384,7 +411,7 @@ function fqd_spawn(array $argv, string $cwd): bool
     if (!$argv || !fqd_can_exec()) return false;
     $script = 'if command -v setsid >/dev/null 2>&1; then setsid nohup "$@" >/dev/null 2>&1 </dev/null & else nohup "$@" >/dev/null 2>&1 </dev/null & fi';
     $cmd = array_merge(array('/bin/sh', '-c', $script, 'fqd-start'), $argv);
-    $p = @proc_open($cmd, array(array('file', '/dev/null', 'r'), array('file', '/dev/null', 'w'), array('file', '/dev/null', 'w')), $pipes, $cwd);
+    $p = fqd_proc_open_argv($cmd, array(array('file', '/dev/null', 'r'), array('file', '/dev/null', 'w'), array('file', '/dev/null', 'w')), $pipes, $cwd);
     if (!is_resource($p)) return false;
     return proc_close($p) === 0;
 }
@@ -501,7 +528,7 @@ function fqd_quota(array $config, string $home, string $cacheDir)
             @touch($lock);
             // One shell level; home/result/lock are positional parameters ($1,$2,$3), never interpolated into the script.
             $script = '( nice -n 19 du -sk -- "$1" >"$2.tmp" 2>/dev/null; [ -s "$2.tmp" ] && mv -f -- "$2.tmp" "$2"; rm -f -- "$2.tmp" "$3" ) >/dev/null 2>&1 &';
-            $p = @proc_open(array('/bin/sh', '-c', $script, 'fqd-du', $home, $res, $lock),
+            $p = fqd_proc_open_argv(array('/bin/sh', '-c', $script, 'fqd-du', $home, $res, $lock),
                 array(array('file', '/dev/null', 'r'), array('file', '/dev/null', 'w'), array('file', '/dev/null', 'w')), $pipes);
             if (is_resource($p)) { proc_close($p); $launched = true; }
         }
