@@ -413,7 +413,7 @@ function fqd_spawn(array $argv, string $cwd): bool
     // Close every inherited descriptor >= 3 before detaching the child. Otherwise
     // a long-lived daemon can keep the HTTP connection open even after PHP responds.
     // /proc/self/fd is available on the supported Linux shared-hosting target.
-    $script = 'for fd in /proc/self/fd/[0-9]*; do n=\${fd##*/}; case "$n" in 0|1|2) continue ;; esac; eval "exec \${n}>&-" 2>/dev/null || :; done; if command -v setsid >/dev/null 2>&1; then setsid nohup "$@" >/dev/null 2>&1 </dev/null & else nohup "$@" >/dev/null 2>&1 </dev/null & fi';
+    $script = 'for fd in /proc/self/fd/[0-9]*; do n=${fd##*/}; case "$n" in 0|1|2) continue ;; esac; eval "exec ${n}>&-" 2>/dev/null || :; done; if command -v setsid >/dev/null 2>&1; then setsid nohup "$@" >/dev/null 2>&1 </dev/null & else nohup "$@" >/dev/null 2>&1 </dev/null & fi';
     $cmd = array_merge(array('/bin/sh', '-c', $script, 'fqd-start'), $argv);
     $p = fqd_proc_open_argv($cmd, array(array('file', '/dev/null', 'r'), array('file', '/dev/null', 'w'), array('file', '/dev/null', 'w')), $pipes, $cwd);
     if (!is_resource($p)) return false;
