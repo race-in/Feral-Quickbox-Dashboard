@@ -440,7 +440,7 @@ function fqd_spawn(array $argv, string $cwd): bool
     // executable identity and start time before reporting success.
     $spawnStatus = @proc_close($p);
     if ($spawnDebug !== '') {
-        @file_put_contents($spawnDebug . '.php', 'php_pid=' . fqd_pid() . "\\nproc_close=' . (string) $spawnStatus . "\\n", FILE_APPEND);
+        @file_put_contents($spawnDebug . '.php', 'php_pid=' . fqd_pid() . "\\nproc_close=" . (string) $spawnStatus . "\\n", FILE_APPEND);
     }
     return true;
 }
