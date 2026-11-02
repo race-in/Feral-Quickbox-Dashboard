@@ -1,6 +1,6 @@
 # QuickBox Classic dashboard reference audit
 
-Review date: 2026-11-01
+Review date: 2026-11-03
 
 Reference: [QuickBox/QB — dashboard](https://github.com/QuickBox/QB/tree/master/dashboard)  
 Reference type: Classic PHP/jQuery QuickBox dashboard  
@@ -42,14 +42,37 @@ Source inspection identified environment and security assumptions that do not fi
 
 Other older source constructs also require a security pass before any reuse: shell command strings are assembled from variables, legacy PHP helpers make broad system assumptions, and several endpoints are intended for privileged QuickBox maintenance.
 
-## Recommended approach for Feral Quickbox Dashboard
+## Feral Classic UI port
 
-1. Use Classic QuickBox as the visual/feature reference for dashboard layout, themes and panel hierarchy.
-2. Use QuickBox Lite as the closer source for the more modernized dashboard components and localization.
-3. Keep a fresh rootless backend; do not embed either upstream project's unrestricted command-execution model.
-4. Start with a read-only interface: app links, qBittorrent/Deluge API connectivity, process status only for the current user, disk usage under user-accessible paths, and honest host-level metric labels.
-5. Add controls only for explicit user-owned scripts with fixed executable paths, validated arguments, and no shell interpolation.
-6. Pin upstream revisions, preserve file-level notices, include full GPLv3-or-later text, and audit third-party asset licenses before vendoring.
+The `feral-classic-quickbox-rootless` branch implements an independently written QuickBox-style shell and preserves the existing rootless PHP backend:
+
+- Classic layout proportions: dark 64px header, 280px left navigation on desktop, responsive navigation on narrow screens, two-column dashboard content and compact panels with dark headings.
+- Dashboard panels: server load/CPU, RAM, disk, uptime, network bandwidth chart, per-interface totals and the right-side slot/system panels.
+- Service Control Center: process status plus Start / Restart / Stop for explicitly configured user-owned processes. All commands remain constrained by the existing private allow-list and are executed without a shell. Read-only detected services do not receive action buttons.
+- Package Management Center: retained as an honest compatibility catalogue. It identifies supported user-space clients and explains why root-only package installation/removal is not offered on a Feral shared slot.
+- Applications: private `APPS=` quick links, plus light/dark theme selection.
+
+The markup and CSS were written for this project. No QuickBox PHP, QuickBox Lite TypeScript, upstream CSS bundle, fonts, logos or binary image assets were copied into this port.
+
+## Feature-parity boundary
+
+| QuickBox feature | Feral branch behaviour |
+| --- | --- |
+| Host dashboard / charts / disk / RAM / uptime | Implemented using readable procfs and filesystem data; host-level metrics are labelled as shared-host values |
+| Service status | Own-UID process inspection; no cross-user process inspection |
+| Service Start / Restart / Stop | Only configured fixed argv commands or safe signals; no arbitrary shell |
+| Enable / Disable at system boot | Not offered; Feral user accounts cannot control systemd unit enablement |
+| Package installation / removal | Not offered; the Package Center is informational and does not run privileged package scripts |
+| QuickBox updates / cache clearing / firewall / OS maintenance | Not offered; these require system privileges |
+| Application shortcuts | Supported through private `APPS=`; API health/auth integration is separate work |
+
+## Recommended approach
+
+1. Keep Classic QuickBox as the primary visual and panel-layout reference and QuickBox Lite as the modern feature/interaction reference.
+2. Keep a purpose-built rootless backend; never expose the upstream unrestricted command templates or systemd targets.
+3. For new controls, require fixed allow-listed executable paths, strict arguments, current-UID ownership checks, CSRF protection and no shell interpolation.
+4. For torrent-client integrations, use explicit API credentials stored outside the webroot and read-only checks first.
+5. Pin reviewed upstream revisions and audit all notices and third-party asset licences before any future vendoring.
 
 ## Licensing note
 
@@ -61,4 +84,4 @@ Before importing or adapting actual Classic QuickBox source code, reconcile the 
 
 The Classic dashboard is useful and arguably the better visual/layout reference; QuickBox Lite is the closer technical starting point for its modern dashboard rendering. Neither upstream backend can be installed unchanged on a Feral shared slot. The project should combine Classic's UI ideas with selected Lite presentation components and a purpose-built rootless backend.
 
-This is a source review, not a live Feral-host compatibility test.
+This is a source review and branch implementation audit, not a visual browser review on the live Feral host.
